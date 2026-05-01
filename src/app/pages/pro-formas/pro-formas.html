@@ -1,0 +1,278 @@
+<div class="page-container stack">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des pro-formas</h1>
+      <p>Création, envoi email, PDF et conversion en facture.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour</a>
+      @if (!showForm() && canCreateProForma()) {
+        <button class="btn btn-primary-sm" (click)="openCreateForm()">Nouvelle pro-forma</button>
+      } @else if (!showForm()) {
+        <span class="permission-note">Lecture seule</span>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  <div class="card">
+    <h2 class="section-title">Filtres</h2>
+    <form [formGroup]="filterForm" class="grid-2">
+      <div class="form-group">
+        <label for="proFormaCustomer">Client</label>
+        <select id="proFormaCustomer" formControlName="customerId">
+          <option value="">Tous</option>
+          @for (customer of customers(); track customer.id) {
+            <option [value]="customer.id">{{ customer.name }}</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="clearFilters()">Réinitialiser</button>
+      <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+    </div>
+  </div>
+
+  @if (showForm()) {
+    <div class="card stack">
+      <h2 class="section-title">
+        {{ editingProForma() ? 'Modifier la pro-forma' : 'Créer une pro-forma' }}
+      </h2>
+
+      <form [formGroup]="proFormaForm" (ngSubmit)="onSubmit()" class="stack">
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="proFormaCustomerId">Client</label>
+            <select
+              id="proFormaCustomerId"
+              formControlName="customerId"
+              (change)="onCustomerChange()"
+            >
+              <option value="">Choisir un client</option>
+              @for (customer of customers(); track customer.id) {
+                <option [value]="customer.id">{{ customer.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="proFormaCustomerName">Nom affiché</label>
+            <input id="proFormaCustomerName" type="text" formControlName="customerName" />
+          </div>
+
+          <div class="form-group">
+            <label for="proFormaValidUntil">Valide jusqu'au</label>
+            <input id="proFormaValidUntil" type="date" formControlName="validUntil" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="proFormaNotes">Notes</label>
+          <textarea id="proFormaNotes" formControlName="notes"></textarea>
+        </div>
+
+        <div class="surface-stack" formArrayName="lines">
+          <div class="line-item-header">
+            <span class="line-item-title">Lignes</span>
+            <button type="button" class="btn btn-outline btn-sm" (click)="addLine()">
+              Ajouter une ligne
+            </button>
+          </div>
+
+          @for (line of lines.controls; track $index) {
+            <div class="line-item-card" [formGroupName]="$index">
+              <div class="line-item-header">
+                <span class="line-item-title">Ligne {{ $index + 1 }}</span>
+                <button type="button" class="btn btn-delete btn-sm" (click)="removeLine($index)">
+                  Retirer
+                </button>
+              </div>
+
+              <div class="three-columns">
+                <div class="form-group">
+                  <label>Produit</label>
+                  <select formControlName="productId">
+                    <option value="">Choisir un produit</option>
+                    @for (product of products(); track product.id) {
+                      <option [value]="product.id">{{ product.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Quantité</label>
+                  <input type="number" min="0.01" step="0.01" formControlName="quantity" />
+                </div>
+
+                <div class="form-group">
+                  <label>Prix unitaire</label>
+                  <input type="number" min="0" step="0.01" formControlName="unitPrice" />
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Remise</label>
+                  <input type="number" min="0" step="0.01" formControlName="discount" />
+                </div>
+
+                <div class="form-group">
+                  <label>TVA</label>
+                  <input type="number" min="0" step="0.01" formControlName="vatRate" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+            {{ editingProForma() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (loading() && proFormas().length === 0) {
+    <div class="card loading-state">Chargement des pro-formas...</div>
+  } @else if (proFormas().length === 0) {
+    <div class="card empty-state">Aucune pro-forma trouvée.</div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Client</th>
+            <th>Statut</th>
+            <th>Validité</th>
+            <th>Total TTC</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (proForma of proFormas(); track proForma.id) {
+            <tr>
+              <td>
+                <strong>{{ proForma.reference }}</strong>
+                <div class="table-note">{{ proForma.lines.length }} ligne(s)</div>
+              </td>
+              <td>{{ proForma.customerName }}</td>
+              <td>
+                <span class="tag">{{ proForma.status }}</span>
+              </td>
+              <td>{{ proForma.validUntil | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ proForma.totalAmountTTC | number: '1.2-2' }}</td>
+              <td>
+                <div class="workflow-actions">
+                  <button class="btn btn-sm btn-ghost" (click)="downloadPdf(proForma)">PDF</button>
+                  @if (canSendProForma()) {
+                    <button class="btn btn-sm btn-ghost" (click)="sendByEmail(proForma)">
+                      Envoyer
+                    </button>
+                  }
+                  @if (canConvertProForma()) {
+                    <button class="btn btn-sm btn-primary-sm" (click)="convertToInvoice(proForma)">
+                      Convertir
+                    </button>
+                  }
+                  @if (canEditProForma()) {
+                    <button class="btn btn-sm btn-edit" (click)="openEditForm(proForma)">
+                      Modifier
+                    </button>
+                  }
+                  @if (!canSendProForma() && !canConvertProForma() && !canEditProForma()) {
+                    <span class="permission-note">Aucune action autorisée</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span class="pagination-info"
+        >{{ totalElements() }} pro-forma(s) • page {{ page() + 1 }} / {{ totalPages() || 1 }}</span
+      >
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() - 1)"
+        [disabled]="page() === 0"
+      >
+        Précédent
+      </button>
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() + 1)"
+        [disabled]="page() + 1 >= totalPages()"
+      >
+        Suivant
+      </button>
+    </div>
+  }
+
+  @if (showSendModal() && selectedProForma(); as proForma) {
+    <div class="modal-overlay" (click)="closeSendModal()">
+      <div class="modal-card stack" (click)="$event.stopPropagation()">
+        <div>
+          <h2 class="section-title">Envoyer la pro-forma {{ proForma.reference }}</h2>
+          <p>Renseigner l'adresse email du destinataire.</p>
+        </div>
+
+        <form [formGroup]="sendForm" (ngSubmit)="submitSendByEmail()" class="stack">
+          <div class="form-group">
+            <label for="proFormaSendEmail">Email</label>
+            <input id="proFormaSendEmail" type="email" formControlName="email" />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="closeSendModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">Envoyer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (showConvertModal() && selectedProForma(); as proForma) {
+    <div class="modal-overlay" (click)="closeConvertModal()">
+      <div class="modal-card stack" (click)="$event.stopPropagation()">
+        <div>
+          <h2 class="section-title">Convertir la pro-forma {{ proForma.reference }}</h2>
+          <p>La date d'échéance est optionnelle et sera transmise à la facture créée.</p>
+        </div>
+
+        <form [formGroup]="convertForm" (ngSubmit)="submitConvertToInvoice()" class="stack">
+          <div class="form-group">
+            <label for="proFormaDueDate">Date d'échéance</label>
+            <input id="proFormaDueDate" type="date" formControlName="dueDate" />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="closeConvertModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+              Convertir en facture
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

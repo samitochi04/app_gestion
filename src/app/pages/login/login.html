@@ -1,0 +1,61 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Connexion</h1>
+      <p>Gestion de Distribution de Bière</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          autocomplete="username"
+          placeholder="votre@email.com"
+          [class.input-error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        />
+        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+          <span class="field-error">Email invalide</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          [class.input-error]="
+            loginForm.get('password')?.invalid && loginForm.get('password')?.touched
+          "
+        />
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <span class="field-error">Minimum 8 caractères</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid || loading()">
+        @if (loading()) {
+          <span class="spinner"></span> Connexion...
+        } @else {
+          Se connecter
+        }
+      </button>
+    </form>
+
+    <div class="auth-links">
+      <a routerLink="/forgot-password">Mot de passe oublié ?</a>
+      <a routerLink="/register">Créer un compte</a>
+    </div>
+  </div>
+</div>

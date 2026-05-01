@@ -1,0 +1,280 @@
+<div class="page-container stack">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des devis</h1>
+      <p>Création, envoi et conversion des devis en commandes.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour</a>
+      @if (!showForm() && canCreateQuote()) {
+        <button class="btn btn-primary-sm" (click)="openCreateForm()">Nouveau devis</button>
+      } @else if (!showForm()) {
+        <span class="permission-note">Lecture seule</span>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  <div class="summary-grid">
+    <div class="summary-tile">
+      Devis total<strong>{{ summary().total }}</strong>
+    </div>
+    <div class="summary-tile">
+      Envoyés<strong>{{ summary().sent }}</strong>
+    </div>
+    <div class="summary-tile">
+      Acceptés<strong>{{ summary().accepted }}</strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Filtres</h2>
+    <form [formGroup]="filterForm" class="grid-2">
+      <div class="form-group">
+        <label for="quoteStatus">Statut</label>
+        <select id="quoteStatus" formControlName="status">
+          <option value="">Tous</option>
+          @for (status of quoteStatuses; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="quoteCustomer">Client</label>
+        <select id="quoteCustomer" formControlName="customerId">
+          <option value="">Tous</option>
+          @for (customer of customers(); track customer.id) {
+            <option [value]="customer.id">{{ customer.name }}</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="clearFilters()">Réinitialiser</button>
+      <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+    </div>
+  </div>
+
+  @if (showForm()) {
+    <div class="card stack">
+      <h2 class="section-title">{{ editingQuote() ? 'Modifier le devis' : 'Créer un devis' }}</h2>
+
+      <form [formGroup]="quoteForm" (ngSubmit)="onSubmit()" class="stack">
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="quoteCustomerId">Client</label>
+            <select id="quoteCustomerId" formControlName="customerId">
+              <option value="">Choisir un client</option>
+              @for (customer of customers(); track customer.id) {
+                <option [value]="customer.id">{{ customer.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="quoteValidUntil">Valide jusqu'au</label>
+            <input id="quoteValidUntil" type="date" formControlName="validUntil" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="quoteNotes">Notes</label>
+          <textarea id="quoteNotes" formControlName="notes"></textarea>
+        </div>
+
+        <div class="surface-stack" formArrayName="lines">
+          <div class="line-item-header">
+            <span class="line-item-title">Lignes du devis</span>
+            <button type="button" class="btn btn-outline btn-sm" (click)="addLine()">
+              Ajouter une ligne
+            </button>
+          </div>
+
+          @for (line of lines.controls; track $index) {
+            <div class="line-item-card" [formGroupName]="$index">
+              <div class="line-item-header">
+                <span class="line-item-title">Ligne {{ $index + 1 }}</span>
+                <button type="button" class="btn btn-delete btn-sm" (click)="removeLine($index)">
+                  Retirer
+                </button>
+              </div>
+
+              <div class="three-columns">
+                <div class="form-group">
+                  <label>Produit</label>
+                  <select formControlName="productId">
+                    <option value="">Choisir un produit</option>
+                    @for (product of products(); track product.id) {
+                      <option [value]="product.id">{{ product.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Quantité</label>
+                  <input type="number" min="0.01" step="0.01" formControlName="quantity" />
+                </div>
+
+                <div class="form-group">
+                  <label>Prix unitaire</label>
+                  <input type="number" min="0" step="0.01" formControlName="unitSalePrice" />
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-group">
+                  <label>Remise</label>
+                  <input type="number" min="0" step="0.01" formControlName="discount" />
+                </div>
+
+                <div class="form-group">
+                  <label>TVA</label>
+                  <input type="number" min="0" step="0.01" formControlName="vatRate" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+            {{ editingQuote() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (loading() && quotes().length === 0) {
+    <div class="card loading-state">Chargement des devis...</div>
+  } @else if (quotes().length === 0) {
+    <div class="card empty-state">Aucun devis trouvé.</div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Client</th>
+            <th>Statut</th>
+            <th>Validité</th>
+            <th>Total TTC</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (quote of quotes(); track quote.id) {
+            <tr>
+              <td>
+                <strong>{{ quote.reference }}</strong>
+                <div class="table-note">{{ quote.lines.length }} ligne(s)</div>
+              </td>
+              <td>{{ getCustomerName(quote.customerId) }}</td>
+              <td>
+                <span class="tag">{{ quote.status }}</span>
+              </td>
+              <td>{{ quote.validUntil | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ quote.totalAmountTTC | number: '1.2-2' }}</td>
+              <td>
+                <div class="workflow-actions">
+                  @if (canSendOrConvertQuote()) {
+                    <button class="btn btn-sm btn-ghost" (click)="sendQuote(quote)">Envoyer</button>
+                    <button class="btn btn-sm btn-primary-sm" (click)="convertQuote(quote)">
+                      Convertir
+                    </button>
+                  }
+                  @if (canEditQuote()) {
+                    <button class="btn btn-sm btn-edit" (click)="openEditForm(quote)">
+                      Modifier
+                    </button>
+                  }
+                  @if (!canSendOrConvertQuote() && !canEditQuote()) {
+                    <span class="permission-note">Aucune action autorisée</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span class="pagination-info"
+        >{{ totalElements() }} devis • page {{ page() + 1 }} / {{ totalPages() || 1 }}</span
+      >
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() - 1)"
+        [disabled]="page() === 0"
+      >
+        Précédent
+      </button>
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() + 1)"
+        [disabled]="page() + 1 >= totalPages()"
+      >
+        Suivant
+      </button>
+    </div>
+  }
+
+  @if (showConvertModal() && selectedQuoteForConversion(); as quote) {
+    <div class="modal-overlay" (click)="closeConvertModal()">
+      <div class="modal-card stack" (click)="$event.stopPropagation()">
+        <div class="page-header">
+          <div>
+            <h2 class="section-title">Conversion du devis {{ quote.reference }}</h2>
+            <p>Renseigner l'adresse de livraison de la commande générée.</p>
+          </div>
+        </div>
+
+        <form [formGroup]="convertForm" (ngSubmit)="submitConversion()" class="stack">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="quoteConvertStreet">Rue</label>
+              <input id="quoteConvertStreet" type="text" formControlName="street" />
+            </div>
+
+            <div class="form-group">
+              <label for="quoteConvertCity">Ville</label>
+              <input id="quoteConvertCity" type="text" formControlName="city" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="quoteConvertPostalCode">Code postal</label>
+              <input id="quoteConvertPostalCode" type="text" formControlName="postalCode" />
+            </div>
+
+            <div class="form-group">
+              <label for="quoteConvertCountry">Pays</label>
+              <input id="quoteConvertCountry" type="text" formControlName="country" />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="closeConvertModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+              Convertir en commande
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,113 @@
+<div class="page-container stack">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des entrepôts</h1>
+      <p>Administrer les sites logistiques et filtrer les entrepôts actifs.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour</a>
+      <button class="btn btn-outline" (click)="toggleActiveFilter()">
+        {{ activeOnly() ? 'Afficher tous' : 'Afficher actifs uniquement' }}
+      </button>
+      @if (!showForm()) {
+        <button class="btn btn-primary-sm" (click)="openCreateForm()">Nouvel entrepôt</button>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  @if (showForm()) {
+    <div class="card">
+      <h2 class="section-title">
+        {{ editingWarehouse() ? "Modifier l'entrepôt" : 'Créer un entrepôt' }}
+      </h2>
+
+      <form [formGroup]="warehouseForm" (ngSubmit)="onSubmit()" class="stack">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="warehouseName">Nom</label>
+            <input id="warehouseName" type="text" formControlName="name" />
+          </div>
+
+          <div class="form-group">
+            <label for="warehouseCode">Code</label>
+            <input id="warehouseCode" type="text" formControlName="code" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="warehouseAddress">Adresse</label>
+          <textarea id="warehouseAddress" formControlName="address"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+            {{ editingWarehouse() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (loading() && warehouses().length === 0) {
+    <div class="card loading-state">Chargement des entrepôts...</div>
+  } @else if (warehouses().length === 0) {
+    <div class="card empty-state">Aucun entrepôt trouvé.</div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Code</th>
+            <th>Adresse</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (warehouse of warehouses(); track warehouse.id) {
+            <tr>
+              <td>{{ warehouse.id }}</td>
+              <td>
+                <strong>{{ warehouse.name }}</strong>
+              </td>
+              <td>
+                <span class="tag">{{ warehouse.code }}</span>
+              </td>
+              <td>{{ warehouse.address || 'Aucune adresse' }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.active]="warehouse.active"
+                  [class.inactive]="!warehouse.active"
+                >
+                  {{ warehouse.active ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm btn-edit" (click)="openEditForm(warehouse)">
+                    Modifier
+                  </button>
+                  <button class="btn btn-sm btn-delete" (click)="deleteWarehouse(warehouse)">
+                    Supprimer
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

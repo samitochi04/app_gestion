@@ -1,0 +1,284 @@
+<div class="page-container stack">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des produits</h1>
+      <p>CRUD produit, filtres, pagination et consultation de stock par article.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour</a>
+      @if (!showForm()) {
+        <button class="btn btn-primary-sm" (click)="openCreateForm()">Nouveau produit</button>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  <div class="card">
+    <h2 class="section-title">Filtres</h2>
+    <form [formGroup]="filterForm" class="grid-3">
+      <div class="form-group">
+        <label for="productQuery">Recherche</label>
+        <input id="productQuery" type="text" formControlName="query" placeholder="Nom ou SKU" />
+      </div>
+
+      <div class="form-group">
+        <label for="productCategory">Catégorie</label>
+        <select id="productCategory" formControlName="categoryId">
+          <option value="">Toutes</option>
+          @for (category of categories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="productActive">Statut</label>
+        <select id="productActive" formControlName="active">
+          <option value="all">Tous</option>
+          <option value="true">Actifs</option>
+          <option value="false">Inactifs</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="clearFilters()">Réinitialiser</button>
+      <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+    </div>
+  </div>
+
+  @if (showForm()) {
+    <div class="card">
+      <h2 class="section-title">
+        {{ editingProduct() ? 'Modifier le produit' : 'Créer un produit' }}
+      </h2>
+
+      <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="stack">
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="productName">Nom</label>
+            <input id="productName" type="text" formControlName="name" />
+          </div>
+
+          <div class="form-group">
+            <label for="productSku">SKU</label>
+            <input id="productSku" type="text" formControlName="sku" />
+          </div>
+
+          <div class="form-group">
+            <label for="productType">Type</label>
+            <select id="productType" formControlName="type">
+              @for (type of productTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="productCategoryId">Catégorie</label>
+            <select id="productCategoryId" formControlName="categoryId">
+              <option value="">Aucune</option>
+              @for (category of categories(); track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="productPurchasePrice">Prix d'achat</label>
+            <input
+              id="productPurchasePrice"
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="unitPurchasePrice"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="productUnit">Unité</label>
+            <input
+              id="productUnit"
+              type="text"
+              formControlName="unit"
+              placeholder="carton, casier, bouteille..."
+            />
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="productMargin">Marge (%)</label>
+            <input
+              id="productMargin"
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="marginPercent"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="productSalePrice">Prix de vente</label>
+            <input
+              id="productSalePrice"
+              type="number"
+              min="0"
+              step="0.01"
+              formControlName="unitSalePrice"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="productDescription">Description</label>
+          <textarea id="productDescription" formControlName="description"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+            {{ editingProduct() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (loading() && products().length === 0) {
+    <div class="card loading-state">Chargement des produits...</div>
+  } @else if (products().length === 0) {
+    <div class="card empty-state">Aucun produit trouvé.</div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Produit</th>
+            <th>Catégorie</th>
+            <th>Type</th>
+            <th>Prix</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of products(); track product.id) {
+            <tr>
+              <td>
+                <span class="tag">{{ product.sku }}</span>
+              </td>
+              <td>
+                <strong>{{ product.name }}</strong>
+                <div class="info-text">{{ product.unit }}</div>
+              </td>
+              <td>{{ getCategoryName(product.categoryId) }}</td>
+              <td>
+                <span class="tag">{{ product.type }}</span>
+              </td>
+              <td>
+                <div>Achat: {{ product.unitPurchasePrice | number: '1.2-2' }}</div>
+                <div class="info-text">Vente: {{ product.unitSalePrice | number: '1.2-2' }}</div>
+              </td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.active]="product.active"
+                  [class.inactive]="!product.active"
+                >
+                  {{ product.active ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm btn-ghost" (click)="openStockModal(product)">
+                    Stock
+                  </button>
+                  <button class="btn btn-sm btn-edit" (click)="openEditForm(product)">
+                    Modifier
+                  </button>
+                  <button class="btn btn-sm btn-delete" (click)="deleteProduct(product)">
+                    Supprimer
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span class="pagination-info"
+        >{{ totalElements() }} produit(s) • page {{ page() + 1 }} / {{ totalPages() || 1 }}</span
+      >
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() - 1)"
+        [disabled]="page() === 0"
+      >
+        Précédent
+      </button>
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() + 1)"
+        [disabled]="page() + 1 >= totalPages()"
+      >
+        Suivant
+      </button>
+    </div>
+  }
+
+  @if (showStockModal()) {
+    <div class="modal-overlay" (click)="closeStockModal()">
+      <div class="modal-card stack" (click)="$event.stopPropagation()">
+        <div class="page-header">
+          <div>
+            <h2 class="section-title">Stock produit</h2>
+            <p>{{ selectedProduct()?.name }} - {{ selectedProduct()?.sku }}</p>
+          </div>
+          <button class="btn btn-outline btn-sm" (click)="closeStockModal()">Fermer</button>
+        </div>
+
+        @if (stockDetails().length === 0) {
+          <div class="empty-state">Aucun stock disponible pour ce produit.</div>
+        } @else {
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Entrepôt</th>
+                  <th>Total</th>
+                  <th>Réservé</th>
+                  <th>Disponible</th>
+                  <th>Valeur totale</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of stockDetails(); track item.warehouseId) {
+                  <tr>
+                    <td>{{ item.warehouseId }}</td>
+                    <td>{{ item.totalQuantity }}</td>
+                    <td>{{ item.reservedQuantity }}</td>
+                    <td>{{ item.availableQuantity }}</td>
+                    <td>{{ item.totalValue | number: '1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

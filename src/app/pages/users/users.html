@@ -1,0 +1,120 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des Utilisateurs</h1>
+      <p>Liste des utilisateurs et assignation des rôles</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour</a>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  <!-- Modal assignation de rôle -->
+  @if (showAssignModal()) {
+    <div class="modal-overlay" (click)="cancelAssign()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h2>Assigner un rôle</h2>
+        @if (selectedUser(); as user) {
+          <p class="modal-user">
+            Utilisateur : <strong>{{ user.fullName }}</strong> ({{ user.email }})
+          </p>
+        }
+
+        <div class="form-group">
+          <label for="roleSelect">Sélectionner un rôle</label>
+          <select id="roleSelect" [(ngModel)]="selectedRoleId" class="form-select">
+            <option [value]="0" disabled>-- Choisir un rôle --</option>
+            @for (role of roles(); track role.id) {
+              <option [value]="role.id">{{ role.name }} - {{ role.description }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-outline" (click)="cancelAssign()">Annuler</button>
+          <button
+            class="btn btn-primary-sm"
+            [disabled]="!selectedRoleId || loading()"
+            (click)="assignRole()"
+          >
+            @if (loading()) {
+              <span class="spinner"></span>
+            }
+            Assigner
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Liste des utilisateurs -->
+  @if (loading() && users().length === 0) {
+    <div class="loading-state">Chargement des utilisateurs...</div>
+  } @else if (users().length === 0) {
+    <div class="empty-state">
+      <p>Aucun utilisateur trouvé.</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom complet</th>
+            <th>Email</th>
+            <th>Actif</th>
+            <th>Rôles</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>
+                <strong>{{ user.fullName }}</strong>
+              </td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.active]="user.active"
+                  [class.inactive]="!user.active"
+                >
+                  {{ user.active ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td>
+                <div class="role-tags">
+                  @for (role of user.roles; track role) {
+                    <span class="tag">{{ role }}</span>
+                  }
+                  @if (user.roles.length === 0) {
+                    <span class="no-role">Aucun rôle</span>
+                  }
+                </div>
+              </td>
+              <td>{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-sm btn-edit" (click)="openAssignRole(user)">
+                    Assigner rôle
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

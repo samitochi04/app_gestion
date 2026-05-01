@@ -1,0 +1,317 @@
+<div class="page-container stack">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des commandes</h1>
+      <p>Workflow de préparation, expédition et livraison des commandes.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour</a>
+      @if (!showForm() && canCreateOrder()) {
+        <button class="btn btn-primary-sm" (click)="openCreateForm()">Nouvelle commande</button>
+      } @else if (!showForm()) {
+        <span class="permission-note">Lecture seule</span>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">{{ successMessage() }}</div>
+  }
+
+  <div class="summary-grid">
+    <div class="summary-tile">
+      Commandes<strong>{{ summary().total }}</strong>
+    </div>
+    <div class="summary-tile">
+      En cours<strong>{{ summary().open }}</strong>
+    </div>
+    <div class="summary-tile">
+      Expédiées<strong>{{ summary().shipped }}</strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Filtres</h2>
+    <form [formGroup]="filterForm" class="grid-2">
+      <div class="form-group">
+        <label for="orderStatus">Statut</label>
+        <select id="orderStatus" formControlName="status">
+          <option value="">Tous</option>
+          @for (status of orderStatuses; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="orderCustomer">Client</label>
+        <select id="orderCustomer" formControlName="customerId">
+          <option value="">Tous</option>
+          @for (customer of customers(); track customer.id) {
+            <option [value]="customer.id">{{ customer.name }}</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="clearFilters()">Réinitialiser</button>
+      <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+    </div>
+  </div>
+
+  @if (showForm()) {
+    <div class="card stack">
+      <h2 class="section-title">
+        {{ editingOrder() ? 'Modifier la commande' : 'Créer une commande' }}
+      </h2>
+
+      <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="stack">
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="orderCustomerId">Client</label>
+            <select id="orderCustomerId" formControlName="customerId">
+              <option value="">Choisir un client</option>
+              @for (customer of customers(); track customer.id) {
+                <option [value]="customer.id">{{ customer.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="orderQuoteId">Devis source</label>
+            <input id="orderQuoteId" type="number" min="1" formControlName="quoteId" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="orderStreet">Rue</label>
+            <input id="orderStreet" type="text" formControlName="street" />
+          </div>
+
+          <div class="form-group">
+            <label for="orderCity">Ville</label>
+            <input id="orderCity" type="text" formControlName="city" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="orderPostalCode">Code postal</label>
+            <input id="orderPostalCode" type="text" formControlName="postalCode" />
+          </div>
+
+          <div class="form-group">
+            <label for="orderCountry">Pays</label>
+            <input id="orderCountry" type="text" formControlName="country" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="orderNotes">Notes</label>
+          <textarea id="orderNotes" formControlName="notes"></textarea>
+        </div>
+
+        <div class="surface-stack" formArrayName="lines">
+          <div class="line-item-header">
+            <span class="line-item-title">Lignes de commande</span>
+            <button type="button" class="btn btn-outline btn-sm" (click)="addLine()">
+              Ajouter une ligne
+            </button>
+          </div>
+
+          @for (line of lines.controls; track $index) {
+            <div class="line-item-card" [formGroupName]="$index">
+              <div class="line-item-header">
+                <span class="line-item-title">Ligne {{ $index + 1 }}</span>
+                <button type="button" class="btn btn-delete btn-sm" (click)="removeLine($index)">
+                  Retirer
+                </button>
+              </div>
+
+              <div class="three-columns">
+                <div class="form-group">
+                  <label>Produit</label>
+                  <select formControlName="productId">
+                    <option value="">Choisir un produit</option>
+                    @for (product of products(); track product.id) {
+                      <option [value]="product.id">{{ product.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Entrepôt source</label>
+                  <select formControlName="warehouseId">
+                    <option value="">Choisir un entrepôt</option>
+                    @for (warehouse of warehouses(); track warehouse.id) {
+                      <option [value]="warehouse.id">{{ warehouse.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Quantité</label>
+                  <input type="number" min="0.01" step="0.01" formControlName="quantity" />
+                </div>
+              </div>
+
+              <div class="three-columns">
+                <div class="form-group">
+                  <label>Prix unitaire</label>
+                  <input type="number" min="0" step="0.01" formControlName="unitSalePrice" />
+                </div>
+
+                <div class="form-group">
+                  <label>Remise</label>
+                  <input type="number" min="0" step="0.01" formControlName="discount" />
+                </div>
+
+                <div class="form-group">
+                  <label>TVA</label>
+                  <input type="number" min="0" step="0.01" formControlName="vatRate" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+            {{ editingOrder() ? 'Enregistrer' : 'Créer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (loading() && orders().length === 0) {
+    <div class="card loading-state">Chargement des commandes...</div>
+  } @else if (orders().length === 0) {
+    <div class="card empty-state">Aucune commande trouvée.</div>
+  } @else {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Client</th>
+            <th>Statut</th>
+            <th>Livraison</th>
+            <th>Total TTC</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order.id) {
+            <tr>
+              <td>
+                <strong>{{ order.reference }}</strong>
+                <div class="table-note">{{ order.lines.length }} ligne(s)</div>
+              </td>
+              <td>{{ getCustomerName(order.customerId) }}</td>
+              <td>
+                <span class="tag">{{ order.status }}</span>
+              </td>
+              <td>{{ order.shippingCity }} {{ order.shippingCountry }}</td>
+              <td>{{ order.totalAmountTTC | number: '1.2-2' }}</td>
+              <td>
+                <div class="workflow-actions">
+                  @if (canConfirmOrder()) {
+                    <button class="btn btn-sm btn-ghost" (click)="confirmOrder(order)">
+                      Confirmer
+                    </button>
+                  }
+                  @if (canPrepareOrder()) {
+                    <button class="btn btn-sm btn-ghost" (click)="prepareOrder(order)">
+                      Préparer
+                    </button>
+                  }
+                  @if (canShipOrder()) {
+                    <button class="btn btn-sm btn-ghost" (click)="shipOrder(order)">
+                      Expédier
+                    </button>
+                  }
+                  @if (canDeliverOrder()) {
+                    <button class="btn btn-sm btn-ghost" (click)="deliverOrder(order)">
+                      Livrer
+                    </button>
+                  }
+                  @if (canEditOrder()) {
+                    <button class="btn btn-sm btn-edit" (click)="openEditForm(order)">
+                      Modifier
+                    </button>
+                  }
+                  @if (canCancelOrderAction()) {
+                    <button class="btn btn-sm btn-delete" (click)="cancelOrder(order)">
+                      Annuler
+                    </button>
+                  }
+                  @if (
+                    !canConfirmOrder() &&
+                    !canPrepareOrder() &&
+                    !canShipOrder() &&
+                    !canDeliverOrder() &&
+                    !canEditOrder() &&
+                    !canCancelOrderAction()
+                  ) {
+                    <span class="permission-note">Aucune action autorisée</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span class="pagination-info"
+        >{{ totalElements() }} commande(s) • page {{ page() + 1 }} / {{ totalPages() || 1 }}</span
+      >
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() - 1)"
+        [disabled]="page() === 0"
+      >
+        Précédent
+      </button>
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="goToPage(page() + 1)"
+        [disabled]="page() + 1 >= totalPages()"
+      >
+        Suivant
+      </button>
+    </div>
+  }
+
+  @if (showCancelModal() && selectedOrderForCancel(); as order) {
+    <div class="modal-overlay" (click)="closeCancelModal()">
+      <div class="modal-card stack" (click)="$event.stopPropagation()">
+        <div>
+          <h2 class="section-title">Annuler la commande {{ order.reference }}</h2>
+          <p>Cette action modifie immédiatement le statut de la commande.</p>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="closeCancelModal()">Retour</button>
+          <button
+            type="button"
+            class="btn btn-delete"
+            (click)="confirmCancelOrder()"
+            [disabled]="loading()"
+          >
+            Confirmer l'annulation
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
