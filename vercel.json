@@ -1,12 +1,12 @@
 {
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "http://51.75.248.25:8084/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
