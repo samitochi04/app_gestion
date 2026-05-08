@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.kairosinnovationtechnologies.online/erp'
+  apiUrl: 'https://api.kairosinnovationtechnologies.online/erp/api'
 };
