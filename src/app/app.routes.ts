@@ -92,6 +92,16 @@ export const routes: Routes = [
     canActivate: [moduleAccessGuard]
   },
   {
+    path: 'payments',
+    loadComponent: () => import('./pages/payments/payments').then(m => m.PaymentsComponent),
+    canActivate: [moduleAccessGuard]
+  },
+  {
+    path: 'invoices/:id',
+    loadComponent: () => import('./pages/invoices/invoices').then(m => m.InvoicesComponent),
+    canActivate: [moduleAccessGuard]
+  },
+  {
     path: 'credit-notes',
     loadComponent: () => import('./pages/credit-notes/credit-notes').then(m => m.CreditNotesComponent),
     canActivate: [moduleAccessGuard]

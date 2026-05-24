@@ -61,6 +61,11 @@
   gap: 0.5rem;
 }
 
+.form-actions-bottom {
+  justify-content: space-between;
+  align-items: center;
+}
+
 .detail-panel {
   border: 1px solid #e2e8f0;
   border-radius: 12px;

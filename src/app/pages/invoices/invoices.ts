@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Customer, Product } from '../../models/business.model';
 import {
   BillingLine,
@@ -46,6 +46,7 @@ export class InvoicesComponent implements OnInit {
   protected readonly showCancelModal = signal(false);
   protected readonly editingInvoice = signal<Invoice | null>(null);
   protected readonly selectedInvoice = signal<Invoice | null>(null);
+  protected readonly detailMode = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly invoiceStatuses: InvoiceStatus[] = ['DRAFT', 'VALIDATED', 'SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED'];
@@ -57,6 +58,7 @@ export class InvoicesComponent implements OnInit {
   protected readonly canCancelInvoiceAction = signal(true);
   protected readonly canRecordPaymentAction = signal(true);
   protected readonly canManageScheduleAction = signal(true);
+  protected readonly productStockByProductId = signal<Record<number, number | null>>({});
 
   readonly filterForm: FormGroup;
   readonly invoiceForm: FormGroup;
@@ -71,7 +73,9 @@ export class InvoicesComponent implements OnInit {
     protected readonly authService: AuthService,
     private readonly invoiceService: InvoiceService,
     private readonly customerService: CustomerService,
-    private readonly productService: ProductService
+    private readonly productService: ProductService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router
   ) {
     this.filterForm = this.fb.group({
       status: [''],
@@ -133,8 +137,24 @@ export class InvoicesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.route.paramMap.subscribe((params) => {
+      const invoiceId = params.get('id');
+      this.detailMode.set(!!invoiceId);
+
+      if (invoiceId) {
+        this.loadInvoiceDetail(Number(invoiceId));
+      } else {
+        this.loadInvoices();
+      }
+    });
+
     this.loadLookups();
-    this.loadInvoices();
+    this.installments.push(
+      this.fb.group({
+        dueDate: ['', Validators.required],
+        amount: [0, [Validators.required, Validators.min(0.01)]]
+      })
+    );
   }
 
   loadLookups(): void {
@@ -185,6 +205,8 @@ export class InvoicesComponent implements OnInit {
         this.installmentPaymentForm.patchValue({ invoiceId: detail.invoice.id, installmentId: '', amount: 0, reference: '' });
         this.loadSchedule(detail.invoice.id);
         this.detailLoading.set(false);
+        this.selectedInvoice.set(detail.invoice);
+        this.productStockByProductId.set({});
       },
       error: (error) => {
         this.errorMessage.set(getApiErrorMessage(error, 'Erreur lors du chargement du détail facture'));
@@ -217,6 +239,18 @@ export class InvoicesComponent implements OnInit {
     this.invoiceForm.get('customerId')?.enable();
     this.showForm.set(true);
     this.clearMessages();
+  }
+
+  openDetail(invoiceId: number): void {
+    this.router.navigate(['/invoices', invoiceId]);
+  }
+
+  backToList(): void {
+    this.selectedInvoiceDetail.set(null);
+    this.selectedInvoice.set(null);
+    this.schedule.set(null);
+    this.detailMode.set(false);
+    this.router.navigate(['/invoices']);
   }
 
   openEditForm(invoice: Invoice): void {
@@ -325,6 +359,41 @@ export class InvoicesComponent implements OnInit {
       error: (error) => {
         this.errorMessage.set(getApiErrorMessage(error, 'Erreur lors de la validation'));
         this.loading.set(false);
+      }
+    });
+  }
+
+  getLineStock(lineIndex: number): number | null {
+    const productId = Number(this.lines.at(lineIndex)?.get('productId')?.value);
+
+    if (!productId) {
+      return null;
+    }
+
+    const stock = this.productStockByProductId()[productId];
+    return typeof stock === 'number' ? stock : null;
+  }
+
+  loadLineStock(lineIndex: number): void {
+    const productId = Number(this.lines.at(lineIndex)?.get('productId')?.value);
+
+    if (!productId) {
+      return;
+    }
+
+    this.productService.getProductStock(productId).subscribe({
+      next: (stocks) => {
+        const availableQuantity = stocks.reduce((total, stock) => total + stock.availableQuantity, 0);
+        this.productStockByProductId.update((current) => ({
+          ...current,
+          [productId]: availableQuantity
+        }));
+      },
+      error: () => {
+        this.productStockByProductId.update((current) => ({
+          ...current,
+          [productId]: null
+        }));
       }
     });
   }

@@ -22,37 +22,41 @@
     <div class="alert alert-success">{{ successMessage() }}</div>
   }
 
-  <div class="card">
-    <h2 class="section-title">Filtres</h2>
-    <form [formGroup]="filterForm" class="grid-2">
-      <div class="form-group">
-        <label for="invoiceStatus">Statut</label>
-        <select id="invoiceStatus" formControlName="status">
-          <option value="">Tous</option>
-          @for (status of invoiceStatuses; track status) {
-            <option [value]="status">{{ status }}</option>
-          }
-        </select>
-      </div>
+  @if (!detailMode()) {
+    <div class="card">
+      <h2 class="section-title">Filtres</h2>
+      <form [formGroup]="filterForm" class="grid-2">
+        <div class="form-group">
+          <label for="invoiceStatus">Statut</label>
+          <select id="invoiceStatus" formControlName="status">
+            <option value="">Tous</option>
+            @for (status of invoiceStatuses; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="invoiceCustomer">Client</label>
-        <select id="invoiceCustomer" formControlName="customerId">
-          <option value="">Tous</option>
-          @for (customer of customers(); track customer.id) {
-            <option [value]="customer.id">{{ customer.name }}</option>
-          }
-        </select>
-      </div>
-    </form>
+        <div class="form-group">
+          <label for="invoiceCustomer">Client</label>
+          <select id="invoiceCustomer" formControlName="customerId">
+            <option value="">Tous</option>
+            @for (customer of customers(); track customer.id) {
+              <option [value]="customer.id">{{ customer.name }}</option>
+            }
+          </select>
+        </div>
+      </form>
 
-    <div class="form-actions">
-      <button type="button" class="btn btn-outline" (click)="clearFilters()">Réinitialiser</button>
-      <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" (click)="clearFilters()">
+          Réinitialiser
+        </button>
+        <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+      </div>
     </div>
-  </div>
+  }
 
-  @if (showForm()) {
+  @if (!detailMode() && showForm()) {
     <div class="card stack">
       <h2 class="section-title">
         {{ editingInvoice() ? 'Modifier la facture' : 'Créer une facture' }}
@@ -106,12 +110,15 @@
               <div class="three-columns">
                 <div class="form-group">
                   <label>Produit</label>
-                  <select formControlName="productId">
+                  <select formControlName="productId" (change)="loadLineStock($index)">
                     <option value="">Choisir un produit</option>
                     @for (product of products(); track product.id) {
                       <option [value]="product.id">{{ product.name }}</option>
                     }
                   </select>
+                  @if (getLineStock($index) !== null) {
+                    <div class="table-note">Stock disponible: {{ getLineStock($index) }}</div>
+                  }
                 </div>
 
                 <div class="form-group">
@@ -140,21 +147,26 @@
           }
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
-          <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
-            {{ editingInvoice() ? 'Enregistrer' : 'Créer' }}
+        <div class="form-actions form-actions-bottom">
+          <button type="button" class="btn btn-outline" (click)="addLine()">
+            Ajouter une ligne
           </button>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="cancelForm()">Annuler</button>
+            <button type="submit" class="btn btn-primary-sm" [disabled]="loading()">
+              {{ editingInvoice() ? 'Enregistrer' : 'Créer' }}
+            </button>
+          </div>
         </div>
       </form>
     </div>
   }
 
-  @if (loading() && invoices().length === 0) {
+  @if (!detailMode() && loading() && invoices().length === 0) {
     <div class="card loading-state">Chargement des factures...</div>
-  } @else if (invoices().length === 0) {
+  } @else if (!detailMode() && invoices().length === 0) {
     <div class="card empty-state">Aucune facture trouvée.</div>
-  } @else {
+  } @else if (!detailMode()) {
     <div class="table-container">
       <table class="data-table">
         <thead>
@@ -185,36 +197,16 @@
               </td>
               <td>
                 <div class="workflow-actions">
-                  <button class="btn btn-sm btn-ghost" (click)="loadInvoiceDetail(invoice.id)">
+                  <button class="btn btn-sm btn-ghost" (click)="openDetail(invoice.id)">
                     Détail
                   </button>
                   <button class="btn btn-sm btn-ghost" (click)="downloadPdf(invoice)">PDF</button>
-                  @if (canValidateInvoiceAction()) {
-                    <button class="btn btn-sm btn-ghost" (click)="validateInvoice(invoice)">
-                      Valider
-                    </button>
-                  }
-                  @if (canSendInvoiceAction()) {
-                    <button class="btn btn-sm btn-ghost" (click)="sendInvoice(invoice)">
-                      Envoyer
-                    </button>
-                  }
                   @if (canEditInvoice()) {
                     <button class="btn btn-sm btn-edit" (click)="openEditForm(invoice)">
                       Modifier
                     </button>
                   }
-                  @if (canCancelInvoiceAction()) {
-                    <button class="btn btn-sm btn-delete" (click)="cancelInvoice(invoice)">
-                      Annuler
-                    </button>
-                  }
-                  @if (
-                    !canValidateInvoiceAction() &&
-                    !canSendInvoiceAction() &&
-                    !canEditInvoice() &&
-                    !canCancelInvoiceAction()
-                  ) {
+                  @if (!canEditInvoice()) {
                     <span class="permission-note">Aucune action autorisée</span>
                   }
                 </div>
@@ -246,9 +238,9 @@
     </div>
   }
 
-  @if (detailLoading()) {
+  @if (detailMode() && detailLoading()) {
     <div class="detail-panel loading-state">Chargement du détail facture...</div>
-  } @else if (selectedInvoiceDetail(); as detail) {
+  } @else if (detailMode() && selectedInvoiceDetail(); as detail) {
     <div class="detail-panel stack">
       <div class="detail-header">
         <div>
@@ -257,7 +249,25 @@
             Client: {{ detail.invoice.customerName }} · Statut: {{ detail.invoice.status }}
           </p>
         </div>
-        <button class="btn btn-outline btn-sm" (click)="closeDetail()">Fermer</button>
+        <div class="workflow-actions">
+          <button class="btn btn-outline btn-sm" (click)="backToList()">Retour à la liste</button>
+          <button class="btn btn-sm btn-ghost" (click)="downloadPdf(detail.invoice)">PDF</button>
+          @if (canValidateInvoiceAction()) {
+            <button class="btn btn-sm btn-ghost" (click)="validateInvoice(detail.invoice)">
+              Valider
+            </button>
+          }
+          @if (canSendInvoiceAction()) {
+            <button class="btn btn-sm btn-ghost" (click)="sendInvoice(detail.invoice)">
+              Envoyer
+            </button>
+          }
+          @if (canCancelInvoiceAction()) {
+            <button class="btn btn-sm btn-delete" (click)="cancelInvoice(detail.invoice)">
+              Annuler
+            </button>
+          }
+        </div>
       </div>
 
       <div class="summary-grid">

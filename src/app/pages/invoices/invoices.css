@@ -1,1 +1,13 @@
 @import '../commercial-page.css';
+
+.page-container .form-group label {
+  font-size: 0.82rem;
+}
+
+.page-container .form-group input,
+.page-container .form-group select,
+.page-container .form-group textarea,
+.page-container .table-note,
+.page-container .permission-note {
+  font-size: 0.88rem;
+}

@@ -1,24 +1,71 @@
-<div class="dashboard-container">
-  <header class="dashboard-header">
-    <div class="header-left">
-      <h1>Gestion de Distribution de Bière</h1>
+<div class="dashboard-shell">
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"><i class="bi bi-grid-1x2-fill"></i></div>
+      <div>
+        <h1>Gestion</h1>
+        <p>Distribution et pilotage</p>
+      </div>
     </div>
-    <div class="header-right">
-      @if (authService.user(); as user) {
-        <span class="user-info">{{ user.firstName }} {{ user.lastName }}</span>
+
+    @if (authService.user(); as user) {
+      <div class="sidebar-user">
+        <div class="user-avatar">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</div>
+        <div class="sidebar-user__content">
+          <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+          <p class="user-email" [title]="user.email">{{ user.email }}</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-outline btn-sm sidebar-copy-btn"
+          [title]="'Copier ' + user.email"
+          (click)="copyUserEmail(user.email)"
+        >
+          <i class="bi bi-copy"></i>
+        </button>
+      </div>
+    }
+
+    @if (copyMessage()) {
+      <p class="copy-feedback">{{ copyMessage() }}</p>
+    }
+
+    <nav class="sidebar-nav">
+      @if (authService.hasBackofficeAccess()) {
+        @for (group of moduleGroups; track group.label) {
+          <div class="nav-group">
+            <p class="nav-group-title">{{ group.label }}</p>
+            @for (module of group.items; track module.route) {
+              <a [routerLink]="module.route" class="nav-item">
+                <i class="bi" [ngClass]="module.icon"></i>
+                <span>
+                  <strong>{{ module.label }}</strong>
+                  <small>{{ module.description }}</small>
+                </span>
+              </a>
+            }
+          </div>
+        }
       }
-      <nav class="header-nav">
-        <a routerLink="/change-password" class="btn btn-secondary">Modifier mot de passe</a>
-        <button (click)="logout()" class="btn btn-danger">Déconnexion</button>
-      </nav>
+    </nav>
+
+    <div class="sidebar-actions">
+      <a routerLink="/change-password" class="btn btn-secondary">Modifier mot de passe</a>
+      <button (click)="logout()" class="btn btn-danger">Déconnexion</button>
     </div>
-  </header>
+  </aside>
 
   <main class="dashboard-content">
-    <div class="welcome-section">
-      <h2>Bienvenue sur le tableau de bord</h2>
-      <p>Sélectionnez un module pour commencer.</p>
-    </div>
+    <section class="hero-panel">
+      <div>
+        <p class="eyebrow">Tableau de bord</p>
+        <h2>Vue globale de l’activité</h2>
+        <p>Indicateurs de ventes, stock et trésorerie chargés depuis le backend.</p>
+      </div>
+      @if (authService.user(); as user) {
+        <div class="hero-chip">Connecté: {{ user.firstName }} {{ user.lastName }}</div>
+      }
+    </section>
 
     @if (accessDenied()) {
       <div class="alert alert-error">
@@ -29,106 +76,220 @@
 
     @if (!authService.hasBackofficeAccess()) {
       <div class="alert alert-error">
-        Votre utilisateur est bien authentifie, mais vous n'avez pas de permissions. Connectez-vous avec un compte ayant des droits metier pour categories, produits, stock,
-        clients, roles ou utilisateurs.
+        Votre utilisateur est bien authentifie, mais vous n'avez pas de permissions. Connectez-vous
+        avec un compte ayant des droits metier.
       </div>
     }
 
-    <div class="modules-grid">
-      @if (authService.hasBackofficeAccess()) {
-        <a routerLink="/categories" class="module-card">
-          <div class="module-icon">🏷️</div>
-          <h3>Catégories</h3>
-          <p>Structurer le catalogue produit</p>
-        </a>
+    @if (dashboardError()) {
+      <div class="alert alert-error">{{ dashboardError() }}</div>
+    }
 
-        <a routerLink="/products" class="module-card">
-          <div class="module-icon">🍺</div>
-          <h3>Produits</h3>
-          <p>Gérer le catalogue et consulter le stock</p>
-        </a>
-
-        <a routerLink="/warehouses" class="module-card">
-          <div class="module-icon">🏬</div>
-          <h3>Entrepôts</h3>
-          <p>Administrer les sites logistiques</p>
-        </a>
-
-        <a routerLink="/stock" class="module-card">
-          <div class="module-icon">📦</div>
-          <h3>Stock</h3>
-          <p>Créer les mouvements, lots et réservations</p>
-        </a>
-
-        <a routerLink="/customers" class="module-card">
-          <div class="module-icon">🤝</div>
-          <h3>Clients</h3>
-          <p>Suivre les clients particuliers et entreprises</p>
-        </a>
-
-        <a routerLink="/quotes" class="module-card">
-          <div class="module-icon">🧾</div>
-          <h3>Devis</h3>
-          <p>Créer, envoyer et convertir les devis</p>
-        </a>
-
-        <a routerLink="/orders" class="module-card">
-          <div class="module-icon">📋</div>
-          <h3>Commandes</h3>
-          <p>Piloter le workflow logistique des commandes</p>
-        </a>
-
-        <a routerLink="/pro-formas" class="module-card">
-          <div class="module-icon">🗂️</div>
-          <h3>Pro-formas</h3>
-          <p>Générer les pro-formas, PDF et conversions en facture</p>
-        </a>
-
-        <a routerLink="/invoices" class="module-card">
-          <div class="module-icon">💶</div>
-          <h3>Factures</h3>
-          <p>Suivre validation, envoi, paiements et échéanciers</p>
-        </a>
-
-        <a routerLink="/credit-notes" class="module-card">
-          <div class="module-icon">↩️</div>
-          <h3>Avoirs</h3>
-          <p>Créer les avoirs partiels ou complets et les envoyer</p>
-        </a>
-
-        <a routerLink="/audit" class="module-card">
-          <div class="module-icon">🕵️</div>
-          <h3>Audit</h3>
-          <p>Consulter les traces de sécurité et d'activité métier</p>
-        </a>
-
-        <a routerLink="/users" class="module-card">
-          <div class="module-icon">👤</div>
-          <h3>Utilisateurs</h3>
-          <p>Gérer les utilisateurs et leurs rôles</p>
-        </a>
-
-        <a routerLink="/roles" class="module-card">
-          <div class="module-icon">🔐</div>
-          <h3>Rôles & Permissions</h3>
-          <p>Configurer les rôles et permissions</p>
-        </a>
-      } @else {
-        <div class="module-card disabled">
-          <div class="module-icon">🔒</div>
-          <h3>Modules verrouilles</h3>
-          <p>
-            Ce compte peut se connecter mais ne peut pas consulter les ressources protegees du
-            back-office.
-          </p>
+    <section class="dashboard-panel filters-panel">
+      <div class="filters-panel__header">
+        <div>
+          <h3><i class="bi bi-funnel"></i> Filtres du tableau de bord</h3>
+          <p class="muted">Affinez les indicateurs par période et type de produit.</p>
         </div>
-      }
-
-      <div class="module-card disabled">
-        <div class="module-icon">📊</div>
-        <h3>Rapports</h3>
-        <p>Audit, KPI et exports à venir</p>
+        <!-- <div class="filter-chip">{{ filterSummary() }}</div> -->
       </div>
-    </div>
+
+      <form class="filters-grid" [formGroup]="dashboardFiltersForm">
+        <label>
+          <span>Date de debut</span>
+          <input type="date" formControlName="startDate" />
+        </label>
+        <label>
+          <span>Date de fin</span>
+          <input type="date" formControlName="endDate" />
+        </label>
+        <label>
+          <span>Type de produit</span>
+          <select formControlName="productType">
+            <option value="">Tous les types</option>
+            @for (type of productTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Seuil stock mini</span>
+          <input type="number" min="0" formControlName="minStockThreshold" />
+        </label>
+      </form>
+
+      <div class="filters-actions">
+        <button type="button" class="btn btn-primary" (click)="applyFilters()">Appliquer</button>
+        <button type="button" class="btn btn-secondary" (click)="resetFilters()">
+          Réinitialiser
+        </button>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      @for (kpi of kpis(); track kpi.label) {
+        <article class="kpi-card">
+          <div class="kpi-icon"><i class="bi" [ngClass]="kpi.icon"></i></div>
+          <div>
+            <p>{{ kpi.label }}</p>
+            <strong>{{ kpi.value | number: '1.0-0' }}</strong>
+            <span>{{ kpi.hint }}</span>
+          </div>
+        </article>
+      }
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="dashboard-panel">
+        <h3><i class="bi bi-graph-up"></i> Ventes</h3>
+        @if (salesDashboard(); as sales) {
+          <div class="metric-list">
+            <div>
+              <span>CA du jour</span
+              ><strong>{{ sales.caToday | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div>
+              <span>CA de la période</span
+              ><strong>{{ sales.caThisMonth | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div>
+              <span>Commandes en attente</span><strong>{{ sales.ordersPending }}</strong>
+            </div>
+            <div>
+              <span>Taux de conversion devis</span
+              ><strong>{{ sales.quotesConversionRate | percent: '1.0-0' }}</strong>
+            </div>
+          </div>
+        } @else if (loading()) {
+          <p class="muted">Chargement...</p>
+        }
+      </article>
+
+      <article class="dashboard-panel">
+        <h3><i class="bi bi-box-seam"></i> Stock</h3>
+        @if (stockDashboard(); as stock) {
+          <div class="metric-list">
+            <div>
+              <span>Valeur totale</span
+              ><strong>{{ stock.totalStockValue | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div>
+              <span>Produits actifs</span><strong>{{ stock.activeProducts }}</strong>
+            </div>
+            <div>
+              <span>Stock bas</span><strong>{{ stock.productsLowStock }}</strong>
+            </div>
+            <div>
+              <span>Rotation moyenne</span
+              ><strong>{{ stock.averageStockRotation | number: '1.1-1' }}</strong>
+            </div>
+          </div>
+        }
+      </article>
+
+      <article class="dashboard-panel">
+        <h3><i class="bi bi-cash-stack"></i> Trésorerie</h3>
+        @if (financialDashboard(); as financial) {
+          <div class="metric-list">
+            <div>
+              <span>Encours total</span
+              ><strong>{{
+                financial.totalReceivables | currency: 'EUR' : 'symbol' : '1.0-0'
+              }}</strong>
+            </div>
+            <div>
+              <span>Échéances en retard</span
+              ><strong>{{
+                financial.overdueReceivables | currency: 'EUR' : 'symbol' : '1.0-0'
+              }}</strong>
+            </div>
+            <div>
+              <span>CA de la période</span
+              ><strong>{{
+                financial.invoicedThisMonth | currency: 'EUR' : 'symbol' : '1.0-0'
+              }}</strong>
+            </div>
+            <div>
+              <span>Résultat net</span
+              ><strong>{{ financial.netResult | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+          </div>
+        }
+      </article>
+    </section>
+
+    <section class="dashboard-grid lower-grid">
+      <article class="dashboard-panel">
+        <h3><i class="bi bi-building"></i> Catalogue</h3>
+        @if (stockDashboard(); as stock) {
+          <div class="metric-list compact-metrics">
+            <div>
+              <span>Produits filtres</span><strong>{{ stock.totalProducts }}</strong>
+            </div>
+            <div>
+              <span>Stock disponible</span><strong>{{ stock.totalAvailableQuantity }}</strong>
+            </div>
+            <div>
+              <span>Valeur stock</span>
+              <strong>{{ stock.totalStockValue | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+          </div>
+
+          <div class="type-breakdown">
+            @for (item of productTypeBreakdown(); track item.type) {
+              <div class="type-breakdown__item">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="dashboard-panel">
+        <h3><i class="bi bi-exclamation-triangle"></i> Alertes stock</h3>
+        @if (stockDashboard(); as stock) {
+          @if (stock.alerts.length === 0) {
+            <p class="muted">Aucune alerte de stock.</p>
+          } @else {
+            <div class="alert-list">
+              @for (alert of stock.alerts | slice: 0 : 5; track alert.productId) {
+                <div class="alert-item">
+                  <strong>{{ alert.productName }}</strong>
+                  <span
+                    >{{ alert.currentQuantity }} / {{ alert.minQuantity }} dans
+                    {{ alert.warehouseName }}</span
+                  >
+                </div>
+              }
+            </div>
+          }
+        }
+      </article>
+
+      <article class="dashboard-panel">
+        <h3><i class="bi bi-receipt"></i> Top produits</h3>
+        @if (stockDashboard(); as stock) {
+          <div class="alert-list">
+            @for (item of stock.topReceivedProducts | slice: 0 : 5; track item.id) {
+              <div class="alert-item">
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.count }} unite(s) en stock</span>
+              </div>
+            }
+          </div>
+        }
+      </article>
+    </section>
+
+    @if (accessDenied() || !authService.hasBackofficeAccess()) {
+      <section class="dashboard-panel locked-panel">
+        <h3><i class="bi bi-lock"></i> Accès limité</h3>
+        <p>
+          Ce compte peut se connecter mais n'a pas les droits nécessaires pour consulter les modules
+          métier.
+        </p>
+      </section>
+    }
   </main>
 </div>

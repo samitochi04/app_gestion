@@ -1,0 +1,133 @@
+<div class="page-container stack">
+  <div class="page-header">
+    <div>
+      <h1>Tresorerie</h1>
+      <p>Suivi des encaissements, des factures en risque et des indicateurs financiers.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/dashboard" class="btn btn-outline">Retour dashboard</a>
+      <a routerLink="/invoices" class="btn btn-primary-sm">Ouvrir factures</a>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">{{ errorMessage() }}</div>
+  }
+
+  <div class="card">
+    <h2 class="section-title">Filtres</h2>
+    <form [formGroup]="filterForm" class="grid-3">
+      <div class="form-group">
+        <label for="treasuryStart">Date debut</label>
+        <input id="treasuryStart" type="date" formControlName="startDate" />
+      </div>
+
+      <div class="form-group">
+        <label for="treasuryEnd">Date fin</label>
+        <input id="treasuryEnd" type="date" formControlName="endDate" />
+      </div>
+
+      <div class="form-group">
+        <label for="treasuryStatus">Statut facture</label>
+        <select id="treasuryStatus" formControlName="status">
+          <option value="">Tous</option>
+          @for (status of invoiceStatuses; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="resetFilters()">Reinitialiser</button>
+      <button type="button" class="btn btn-primary-sm" (click)="applyFilters()">Appliquer</button>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-tile">
+      Encours total
+      <strong>{{ totalReceivables() | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+    </div>
+    <div class="summary-tile">
+      Montant collecte
+      <strong>{{ totalCollected() | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+    </div>
+    <div class="summary-tile">
+      Factures en retard
+      <strong>{{ overdueCount() }}</strong>
+    </div>
+    <div class="summary-tile">
+      Panier moyen paiement
+      <strong>{{ averagePaymentAmount() | currency: 'EUR' : 'symbol' : '1.0-0' }}</strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Factures a risque</h2>
+    @if (loading() && atRiskInvoices().length === 0) {
+      <div class="loading-state">Chargement des indicateurs de tresorerie...</div>
+    } @else if (atRiskInvoices().length === 0) {
+      <div class="empty-state">Aucune facture en risque pour les filtres actuels.</div>
+    } @else {
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Client</th>
+              <th>Statut</th>
+              <th>Echeance</th>
+              <th>Reste du</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of atRiskInvoices(); track invoice.id) {
+              <tr>
+                <td>{{ invoice.reference }}</td>
+                <td>{{ invoice.customerName }}</td>
+                <td>
+                  <span class="tag">{{ invoice.status }}</span>
+                </td>
+                <td>{{ invoice.dueDate | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ invoice.remainingAmount | currency: 'EUR' : 'symbol' : '1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Reglements recents</h2>
+    @if (filteredPayments().length === 0) {
+      <div class="empty-state">Aucun reglement trouve avec ces filtres.</div>
+    } @else {
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Facture</th>
+              <th>Methode</th>
+              <th>Montant</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of filteredPayments(); track payment.id) {
+              <tr>
+                <td>{{ payment.paidAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ invoiceReference(payment.invoiceId) }}</td>
+                <td>{{ payment.method }}</td>
+                <td>{{ payment.amount | currency: 'EUR' : 'symbol' : '1.0-0' }}</td>
+                <td>{{ payment.reference || '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
