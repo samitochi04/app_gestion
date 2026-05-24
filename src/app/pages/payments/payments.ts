@@ -206,4 +206,43 @@ export class PaymentsComponent implements OnInit {
   protected invoiceReference(invoiceId: number): string {
     return this.invoices().find((invoice) => invoice.id === invoiceId)?.reference ?? `#${invoiceId}`;
   }
+
+  protected invoiceStatusLabel(status: InvoiceStatus): string {
+    const labels: Record<InvoiceStatus, string> = {
+      DRAFT: 'Brouillon',
+      VALIDATED: 'Validee',
+      SENT: 'Envoyee',
+      PARTIALLY_PAID: 'Partiellement payee',
+      PAID: 'Payee',
+      OVERDUE: 'En retard',
+      CANCELLED: 'Annulee'
+    };
+
+    return labels[status] ?? status;
+  }
+
+  protected invoiceStatusClass(status: InvoiceStatus): string {
+    const classes: Record<InvoiceStatus, string> = {
+      DRAFT: 'tag-status tag-status-draft',
+      VALIDATED: 'tag-status tag-status-validated',
+      SENT: 'tag-status tag-status-sent',
+      PARTIALLY_PAID: 'tag-status tag-status-partially-paid',
+      PAID: 'tag-status tag-status-paid',
+      OVERDUE: 'tag-status tag-status-overdue',
+      CANCELLED: 'tag-status tag-status-cancelled'
+    };
+
+    return classes[status] ?? 'tag-status';
+  }
+
+  protected paymentMethodLabel(method: Payment['method']): string {
+    const labels: Record<Payment['method'], string> = {
+      CASH: 'Especes',
+      BANK_TRANSFER: 'Virement bancaire',
+      MOBILE_MONEY: 'Mobile money',
+      CHECK: 'Cheque'
+    };
+
+    return labels[method] ?? method;
+  }
 }

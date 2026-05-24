@@ -31,7 +31,7 @@
           <select id="invoiceStatus" formControlName="status">
             <option value="">Tous</option>
             @for (status of invoiceStatuses; track status) {
-              <option [value]="status">{{ status }}</option>
+              <option [value]="status">{{ invoiceStatusLabel(status) }}</option>
             }
           </select>
         </div>
@@ -188,7 +188,9 @@
               </td>
               <td>{{ invoice.customerName }}</td>
               <td>
-                <span class="tag">{{ invoice.status }}</span>
+                <span [class]="invoiceStatusClass(invoice.status)">{{
+                  invoiceStatusLabel(invoice.status)
+                }}</span>
               </td>
               <td>{{ invoice.dueDate | date: 'dd/MM/yyyy' }}</td>
               <td>
@@ -246,7 +248,10 @@
         <div>
           <h2 class="detail-title">Facture {{ detail.invoice.reference }}</h2>
           <p class="muted">
-            Client: {{ detail.invoice.customerName }} · Statut: {{ detail.invoice.status }}
+            Client: {{ detail.invoice.customerName }} · Statut:
+            <span [class]="invoiceStatusClass(detail.invoice.status)">{{
+              invoiceStatusLabel(detail.invoice.status)
+            }}</span>
           </p>
         </div>
         <div class="workflow-actions">
@@ -301,7 +306,7 @@
                 @for (payment of detail.payments; track payment.id) {
                   <tr>
                     <td>{{ payment.paidAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-                    <td>{{ payment.method }}</td>
+                    <td>{{ paymentMethodLabel(payment.method) }}</td>
                     <td>{{ payment.amount | number: '1.2-2' }}</td>
                     <td>{{ payment.reference || '-' }}</td>
                   </tr>
@@ -325,7 +330,7 @@
                 <label>Méthode</label>
                 <select formControlName="method">
                   @for (method of paymentMethods; track method) {
-                    <option [value]="method">{{ method }}</option>
+                    <option [value]="method">{{ paymentMethodLabel(method) }}</option>
                   }
                 </select>
               </div>
@@ -425,7 +430,7 @@
                 <label>Méthode</label>
                 <select formControlName="method">
                   @for (method of paymentMethods; track method) {
-                    <option [value]="method">{{ method }}</option>
+                    <option [value]="method">{{ paymentMethodLabel(method) }}</option>
                   }
                 </select>
               </div>

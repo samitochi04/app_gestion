@@ -11,3 +11,56 @@
 .page-container .permission-note {
   font-size: 0.88rem;
 }
+
+.tag-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.tag-status-draft {
+  background: #edf2f7;
+  color: #4a5568;
+  border-color: #cbd5e0;
+}
+
+.tag-status-validated,
+.tag-status-sent {
+  background: #ebf8ff;
+  color: #1a4f8b;
+  border-color: #90cdf4;
+}
+
+.tag-status-partially-paid {
+  background: #fffaf0;
+  color: #9c4221;
+  border-color: #f6ad55;
+}
+
+.tag-status-paid {
+  background: #f0fff4;
+  color: #1f6d3d;
+  border-color: #68d391;
+}
+
+.tag-status-overdue {
+  background: #fff5f5;
+  color: #a61b1b;
+  border-color: #fc8181;
+}
+
+.tag-status-cancelled {
+  background: #f7fafc;
+  color: #718096;
+  border-color: #cbd5e0;
+}
+
+.detail-header .muted .tag-status {
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
