@@ -1,4 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.kairosinnovationtechnologies.online/erp/api'
+  apiBaseUrl: 'http://51.75.248.25:8084',
+  appName: 'KIT — Gestion',
+  defaultTheme: 'light' as const,
 };
