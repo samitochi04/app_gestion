@@ -1,0 +1,14 @@
+<app-page-header title="Avoirs" description="Notes de crédit émises aux clients.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouveau</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="creditNotes()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucun avoir" [canView]="false" [canEdit]="false" [canDelete]="false"
+    />
+  </div>
+</app-card>

@@ -1,0 +1,44 @@
+<app-page-header title="Mouvements de stock" description="Entrées, sorties, ajustements et transferts.">
+  <app-search-input (changed)="movementsSearch.set($event)" />
+  <app-button variant="secondary" (pressed)="openFilters()">
+    <app-icon name="filter" [size]="16" />
+    Filtres@if (activeFilterCount() > 0) { <span> ({{ activeFilterCount() }})</span> }
+  </app-button>
+  <app-button (pressed)="create()">+ Nouveau mouvement</app-button>
+</app-page-header>
+
+<app-alert-banner
+  [tone]="stockBannerTone()"
+  [title]="stockAlerts().length > 0 ? stockAlerts().length + ' produit(s) nécessitent votre attention' : 'Niveaux de stock normaux'"
+  [message]="stockAlerts().length > 0 ? 'Ruptures ou stock bas détectés — voir l’onglet Stock actuel.' : 'Aucune rupture ni alerte de stock bas actuellement.'"
+/>
+
+<app-segmented-tabs [options]="tabs" [active]="activeTab()" (selected)="selectTab($event)" class="mv-page-tabs" />
+
+@if (activeTab() === 'mouvements') {
+  <app-card [padded]="false">
+    <div class="table-container">
+      <app-data-table
+        [columns]="movementColumns" [rows]="movements()" [loading]="loading()"
+        [searchTerm]="movementsSearch()"
+        emptyTitle="Aucun mouvement" [showActions]="false"
+      />
+    </div>
+    <div class="table-footer">
+      <app-paginator
+        [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+        (pageChange)="onPageChange($event)"
+      />
+    </div>
+  </app-card>
+} @else {
+  <app-card [padded]="false">
+    <div class="table-container">
+      <app-data-table
+        [columns]="stockColumns" [rows]="currentStock()" [loading]="stockLoading()"
+        [searchTerm]="stockSearch()"
+        emptyTitle="Aucune donnée de stock" [showActions]="false"
+      />
+    </div>
+  </app-card>
+}

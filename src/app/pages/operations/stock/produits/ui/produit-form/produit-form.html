@@ -1,0 +1,37 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <app-form-field label="Nom" [required]="true"
+    [error]="submitted() && form.controls.name.invalid ? 'Le nom est requis.' : ''">
+    <app-text-input formControlName="name" />
+  </app-form-field>
+
+  <app-form-field label="SKU" [required]="true"
+    [error]="submitted() && form.controls.sku.invalid ? 'Le SKU est requis.' : ''">
+    <app-text-input formControlName="sku" [placeholder]="'SKU-0001'" />
+  </app-form-field>
+
+  <div class="row-2">
+    <app-form-field label="Catégorie" [required]="true">
+      <app-select [options]="categoryOptions()" formControlName="categoryId" placeholder="Choisir..." />
+    </app-form-field>
+    <app-form-field label="Unité" [required]="true">
+      <app-text-input formControlName="unit" placeholder="pcs" />
+    </app-form-field>
+  </div>
+
+  <div class="row-2">
+    <app-form-field label="Prix d’achat" [required]="true">
+      <app-text-input type="number" formControlName="unitPurchasePrice" />
+    </app-form-field>
+    <app-form-field label="Prix de vente">
+      <app-text-input type="number" formControlName="unitSalePrice" />
+    </app-form-field>
+  </div>
+
+  <app-form-field label="Description">
+    <app-text-input formControlName="description" />
+  </app-form-field>
+
+  <div class="form-actions">
+    <app-button type="submit">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

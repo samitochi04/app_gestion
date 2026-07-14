@@ -1,0 +1,28 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <app-form-field label="Nom du rôle" [required]="true"
+    [error]="submitted() && form.controls.name.invalid ? 'Le nom est requis.' : ''">
+    <app-text-input formControlName="name" />
+  </app-form-field>
+  <app-form-field label="Description">
+    <app-text-input formControlName="description" />
+  </app-form-field>
+
+  <p class="t-micro perm-title">Permissions</p>
+  <div class="perm-groups">
+    @for (entry of permissionGroups() | keyvalue; track entry.key) {
+      <div class="perm-group">
+        <p class="t-body-strong perm-group__title">{{ entry.key }}</p>
+        @for (perm of entry.value; track perm.id) {
+          <label class="perm-item">
+            <input type="checkbox" [checked]="isChecked(perm.name)" (change)="toggle(perm.name)" />
+            <span class="t-caption">{{ perm.description || perm.name }}</span>
+          </label>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

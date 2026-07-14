@@ -1,0 +1,60 @@
+.menu { min-height: 100vh; background: var(--color-bg-canvas); display: flex; flex-direction: column; }
+.menu__header {
+  height: var(--topbar-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.menu__brand { display: flex; align-items: center; gap: var(--space-2); }
+.menu__logo {
+  width: 30px; height: 30px; border-radius: var(--radius-sm);
+  background: var(--color-primary); color: var(--color-on-primary);
+  display: flex; align-items: center; justify-content: center; font-weight: var(--fw-semibold);
+}
+.menu__header-actions { display: flex; align-items: center; gap: var(--space-3); }
+.menu__logout {
+  display: flex; align-items: center; gap: var(--space-2);
+  background: none; border: none; cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-caption);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+.menu__logout:hover { background: var(--color-surface-alt); color: var(--color-danger); }
+
+.menu__main {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-6);
+}
+.menu__greeting { margin-bottom: var(--space-2); }
+.menu__title { margin-bottom: var(--space-2); }
+.menu__subtitle { color: var(--color-text-secondary); margin-bottom: var(--space-8); }
+
+.menu__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+.menu__card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2);
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out);
+}
+.menu__card:hover { transform: translateY(-2px); box-shadow: var(--shadow-pop); }
+.menu__card-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  background: var(--color-primary-tint); color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.menu__card-label { margin: 0; }
+.menu__card-desc { color: var(--color-text-secondary); }

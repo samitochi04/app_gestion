@@ -1,0 +1,48 @@
+<app-page-header title="Reporting — Stock" description="Valorisation et rotation des stocks." />
+
+@if (loading()) {
+  <app-loading-skeleton [count]="4" [rowHeight]="90" />
+} @else if (error()) {
+  <app-error-state title="Impossible de charger le reporting stock"
+                    message="Le serveur n’a pas pu répondre. Réessayez."
+                    (retry)="load()" />
+} @else if (data(); as d) {
+  <div class="rep-kpis">
+    <app-kpi-card label="Valeur du stock" [value]="currency(d.totalStockValue)" />
+    <app-kpi-card label="Produits actifs" [value]="(d.activeProducts ?? 0).toString()" />
+    <app-kpi-card label="Ruptures" [value]="(d.productsOutOfStock ?? 0).toString()" />
+    <app-kpi-card label="Rotation moyenne" [value]="(d.averageStockRotation ?? 0).toFixed(1)" />
+  </div>
+
+  @if (receivedSeries().length || issuedSeries().length) {
+    <div class="rep-charts">
+      @if (receivedSeries().length) {
+        <app-card>
+          <p class="t-h3 rep-chart-title">Top produits reçus</p>
+          <app-bar-chart [data]="receivedSeries()" [height]="260" />
+        </app-card>
+      }
+      @if (issuedSeries().length) {
+        <app-card>
+          <p class="t-h3 rep-chart-title">Top produits sortis</p>
+          <app-bar-chart [data]="issuedSeries()" [height]="260" />
+        </app-card>
+      }
+    </div>
+  }
+
+  @if (d.alerts?.length) {
+    <app-card class="rep-alerts">
+      <p class="t-h3 rep-chart-title">Alertes stock</p>
+      @for (a of (d.alerts ?? []); track a.productId) {
+        <div class="rep-alert-row">
+          <div>
+            <p class="t-body-strong">{{ a.productName }}</p>
+            <p class="t-caption">{{ a.warehouseName }} · {{ a.currentQuantity }} / min {{ a.minQuantity }}</p>
+          </div>
+          <app-badge tone="danger">{{ a.alertType }}</app-badge>
+        </div>
+      }
+    </app-card>
+  }
+}

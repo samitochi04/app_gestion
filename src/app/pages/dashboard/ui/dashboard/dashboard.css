@@ -1,0 +1,22 @@
+.dashboard__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.dashboard__chart, .dashboard__alerts { margin-bottom: var(--space-6); }
+.dashboard__chart-title { margin-bottom: var(--space-4); }
+.dashboard__alert-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.dashboard__alert-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+.dashboard__alert-row p { margin: 0; }
+.dashboard__section-error { margin-bottom: var(--space-6); }
+.dashboard__profit {
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+.dashboard__profit-text { margin: 0; color: var(--color-text-secondary); }

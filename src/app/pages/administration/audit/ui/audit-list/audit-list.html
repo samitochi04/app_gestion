@@ -1,0 +1,19 @@
+<app-page-header title="Audit" description="Historique des actions effectuées dans le système.">
+  <app-search-input (changed)="onSearch($event)" />
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="entries()" [loading]="loading()"
+      [searchTerm]="search()"
+      emptyTitle="Aucune activité enregistrée" [showActions]="false"
+    />
+  </div>
+  <div class="table-footer">
+    <app-paginator
+      [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+      (pageChange)="load($event)"
+    />
+  </div>
+</app-card>

@@ -1,0 +1,47 @@
+<app-segmented-tabs [options]="typeOptions" [active]="type()" (selected)="selectType($event)" class="mv-tabs" />
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="row-2">
+    <app-form-field [label]="type() === 'TRANSFER' ? 'Entrepôt source' : 'Entrepôt'" [required]="true">
+      <app-select [options]="warehouseOptions()" formControlName="warehouseId" placeholder="Choisir..." />
+    </app-form-field>
+    @if (type() === 'TRANSFER') {
+      <app-form-field label="Entrepôt destination" [required]="true">
+        <app-select [options]="warehouseOptions()" formControlName="destWarehouseId" placeholder="Choisir..." />
+      </app-form-field>
+    } @else {
+      <app-form-field label="Référence">
+        <app-text-input formControlName="reference" />
+      </app-form-field>
+    }
+  </div>
+
+  @if (type() === 'TRANSFER') {
+    <app-form-field label="Référence">
+      <app-text-input formControlName="reference" />
+    </app-form-field>
+  }
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="mv-line">
+        <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="unitCost" placeholder="Coût unitaire" />
+        <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  <app-form-field label="Notes">
+    <app-text-input formControlName="notes" />
+  </app-form-field>
+
+  <div class="form-actions">
+    <app-button type="submit">Enregistrer</app-button>
+  </div>
+</form>

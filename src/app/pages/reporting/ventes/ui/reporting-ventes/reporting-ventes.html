@@ -1,0 +1,40 @@
+<app-page-header title="Reporting — Ventes" description="Performance commerciale." />
+
+@if (loading()) {
+  <app-loading-skeleton [count]="4" [rowHeight]="90" />
+} @else if (error()) {
+  <app-error-state title="Impossible de charger le reporting ventes"
+                    message="Le serveur n’a pas pu répondre. Réessayez."
+                    (retry)="load()" />
+} @else if (data(); as d) {
+  <div class="rep-kpis">
+    <app-kpi-card label="CA ce mois" [value]="currency(d.caThisMonth)" />
+    <app-kpi-card label="CA cette année" [value]="currency(d.caThisYear)" />
+    <app-kpi-card label="Commandes en attente" [value]="(d.ordersPending ?? 0).toString()" />
+    <app-kpi-card label="Taux de conversion devis" [value]="(d.quotesConversionRate ?? 0).toFixed(1) + '%'" />
+  </div>
+
+  @if (revenueSeries()[0]?.series?.length) {
+    <app-card class="rep-chart">
+      <p class="t-h3 rep-chart-title">Évolution du chiffre d’affaires</p>
+      <app-line-chart [data]="revenueSeries()" [height]="280" />
+    </app-card>
+  }
+
+  @if (topCustomers().length || topProducts().length) {
+    <div class="rep-charts">
+      @if (topCustomers().length) {
+        <app-card>
+          <p class="t-h3 rep-chart-title">Top clients</p>
+          <app-bar-chart [data]="topCustomers()" [height]="260" />
+        </app-card>
+      }
+      @if (topProducts().length) {
+        <app-card>
+          <p class="t-h3 rep-chart-title">Top produits</p>
+          <app-bar-chart [data]="topProducts()" [height]="260" />
+        </app-card>
+      }
+    </div>
+  }
+}

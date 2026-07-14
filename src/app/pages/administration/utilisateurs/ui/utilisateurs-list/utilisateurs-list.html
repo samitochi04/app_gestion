@@ -1,0 +1,20 @@
+<app-page-header title="Utilisateurs" description="Comptes et rôles assignés.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="users()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucun utilisateur" [canView]="false" [canDelete]="false"
+      (edit)="assignRole($event)"
+    />
+  </div>
+  <div class="table-footer">
+    <app-paginator
+      [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+      (pageChange)="load($event)"
+    />
+  </div>
+</app-card>

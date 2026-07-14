@@ -1,0 +1,59 @@
+@if (isEdit) {
+  <div class="cmd-status-row">
+    <app-badge [tone]="statusTone">{{ statusLabel }}</app-badge>
+  </div>
+}
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="row-2">
+    <app-form-field label="Client" [required]="true">
+      <app-select [options]="customerOptions()" formControlName="customerId" placeholder="Choisir..." />
+    </app-form-field>
+    <app-form-field label="Ville de livraison">
+      <app-text-input formControlName="city" />
+    </app-form-field>
+  </div>
+  <app-form-field label="Adresse de livraison">
+    <app-text-input formControlName="street" />
+  </app-form-field>
+  <div class="row-2">
+    <app-form-field label="Code postal">
+      <app-text-input formControlName="postalCode" />
+    </app-form-field>
+    <app-form-field label="Pays">
+      <app-text-input formControlName="country" />
+    </app-form-field>
+  </div>
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="mv-line">
+        <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="unitSalePrice" placeholder="Prix" />
+        <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  <app-form-field label="Notes">
+    <app-text-input formControlName="notes" />
+  </app-form-field>
+
+  <div class="form-actions">
+    @if (isEdit) {
+      <app-button variant="danger" type="button" (pressed)="cancel()">Annuler la commande</app-button>
+      @switch (order?.status) {
+        @case ('CONFIRMED') { <app-button variant="secondary" type="button" (pressed)="prepare()">Préparer</app-button> }
+        @case ('PREPARING') { <app-button variant="secondary" type="button" (pressed)="ship()">Expédier</app-button> }
+        @case ('SHIPPED') { <app-button variant="secondary" type="button" (pressed)="deliver()">Livrer</app-button> }
+        @default { <app-button variant="secondary" type="button" (pressed)="confirm()">Confirmer</app-button> }
+      }
+    }
+    <app-button type="submit">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

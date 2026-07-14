@@ -1,0 +1,15 @@
+<app-page-header title="Entrepôts" description="Emplacements de stockage.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouveau</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="warehouses()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucun entrepôt" [canView]="false"
+      (edit)="edit($event)" (delete)="remove($event)"
+    />
+  </div>
+</app-card>

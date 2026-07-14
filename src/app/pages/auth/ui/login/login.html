@@ -1,0 +1,37 @@
+<div class="auth">
+  <div class="auth__panel">
+    <div class="auth__brand">
+      <span class="auth__logo">K</span>
+      <p class="t-h2">KIT · Gestion</p>
+    </div>
+
+    <h1 class="t-h1 auth__title">Se connecter</h1>
+    <p class="t-caption auth__subtitle">Accédez à votre espace de gestion.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth__form">
+      <app-form-field label="E-mail" [required]="true"
+        [error]="submitted() && form.controls.email.invalid ? 'Veuillez saisir un e-mail valide.' : ''">
+        <app-text-input type="email" placeholder="jean.dupont@entreprise.com" formControlName="email" />
+      </app-form-field>
+
+      <app-form-field label="Mot de passe" [required]="true"
+        [error]="submitted() && form.controls.password.invalid ? 'Le mot de passe est requis.' : ''">
+        <app-text-input type="password" placeholder="••••••••" autocomplete="current-password" formControlName="password" />
+      </app-form-field>
+
+      @if (error()) {
+        <p class="auth__error t-caption">{{ error() }}</p>
+      }
+
+      <div class="auth__row">
+        <a routerLink="/forgot-password" class="t-caption">Mot de passe oublié ?</a>
+      </div>
+
+      <app-button type="submit" [loading]="loading()" class="auth__submit">Se connecter</app-button>
+    </form>
+
+    <p class="t-caption auth__footer">
+      Pas encore de compte ? <a routerLink="/register">Créer un compte</a>
+    </p>
+  </div>
+</div>

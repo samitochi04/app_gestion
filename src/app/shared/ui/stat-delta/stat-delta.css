@@ -1,0 +1,12 @@
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+}
+.delta--up { color: var(--color-success); }
+.delta--down { color: var(--color-danger); }
+.delta__arrow { transform: rotate(-90deg); }
+.delta__arrow--down { transform: rotate(90deg); }
+.delta__label { font-weight: var(--fw-regular); margin-left: 2px; color: var(--color-text-tertiary); }

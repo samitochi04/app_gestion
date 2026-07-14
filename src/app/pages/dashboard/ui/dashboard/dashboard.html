@@ -1,0 +1,111 @@
+<app-page-header title="Tableau de bord" description="Vue d’ensemble de votre activité.">
+  @if (availableTabs().length > 1) {
+    <app-segmented-tabs [options]="availableTabs()" [active]="category()" (selected)="selectCategory($event)" />
+  }
+</app-page-header>
+
+@if (loading()) {
+  <app-loading-skeleton [count]="4" [rowHeight]="90" />
+} @else {
+
+  @switch (category()) {
+
+    @case ('sales') {
+      @if (salesError()) {
+        <app-card><app-error-state title="Indicateurs de ventes indisponibles" message="Le serveur n’a pas pu répondre." (retry)="load()" /></app-card>
+      } @else if (sales(); as s) {
+        <div class="dashboard__kpis">
+          <app-kpi-card label="CA ce mois" [value]="currency(s.caThisMonth)" />
+          <app-kpi-card label="CA cette année" [value]="currency(s.caThisYear)" />
+          <app-kpi-card label="Commandes en attente" [value]="(s.ordersPending ?? 0).toString()" />
+          <app-kpi-card label="Taux de conversion devis" [value]="(s.quotesConversionRate ?? 0).toFixed(1) + '%'" />
+        </div>
+        @if (salesRevenueSeries()[0]?.series?.length) {
+          <app-card class="dashboard__chart">
+            <p class="t-h3 dashboard__chart-title">Évolution du chiffre d’affaires</p>
+            <app-line-chart [data]="salesRevenueSeries()" [height]="280" />
+          </app-card>
+        }
+      } @else {
+        <app-empty-state icon="bar-chart" title="Aucune donnée de ventes" />
+      }
+    }
+
+    @case ('finance') {
+      @if (financialError()) {
+        <app-card><app-error-state title="Indicateurs financiers indisponibles" message="Le serveur n’a pas pu répondre." (retry)="load()" /></app-card>
+      } @else if (financial(); as f) {
+        <div class="dashboard__kpis">
+          <app-kpi-card label="Chiffre d’affaires" [value]="currency(f.totalRevenue)" />
+          <app-kpi-card label="Charges" [value]="currency(f.totalCharges)" />
+          <app-kpi-card label="Résultat net" [value]="currency(f.netResult)" />
+          <app-kpi-card label="Créances en retard" [value]="currency(f.overdueReceivables)" [invert]="true" />
+        </div>
+
+        <app-card class="dashboard__profit">
+          <app-badge [tone]="isProfitable() ? 'success' : 'danger'">
+            {{ isProfitable() ? 'Rentable' : 'Déficitaire' }}
+          </app-badge>
+          <p class="t-caption dashboard__profit-text">
+            {{ isProfitable()
+              ? 'Le résultat net est positif sur la période observée.'
+              : 'Le résultat net est négatif — les charges dépassent le chiffre d’affaires.' }}
+          </p>
+        </app-card>
+
+        @if (financeTrendSeries()[0]?.series?.length) {
+          <app-card class="dashboard__chart">
+            <p class="t-h3 dashboard__chart-title">Facturé vs encaissé</p>
+            <app-line-chart [data]="financeTrendSeries()" [height]="280" />
+          </app-card>
+        }
+      } @else {
+        <app-empty-state icon="wallet" title="Aucune donnée financière" />
+      }
+    }
+
+    @case ('stock') {
+      @if (stockError()) {
+        <app-card><app-error-state title="Indicateurs de stock indisponibles" message="Le serveur n’a pas pu répondre." (retry)="load()" /></app-card>
+      } @else if (stock(); as st) {
+        <div class="dashboard__kpis">
+          <app-kpi-card label="Valeur du stock" [value]="currency(st.totalStockValue)" />
+          <app-kpi-card label="Produits actifs" [value]="(st.activeProducts ?? 0).toString()" />
+          <app-kpi-card label="Produits en rupture" [value]="(st.productsOutOfStock ?? 0).toString()" />
+          <app-kpi-card label="Rotation moyenne" [value]="(st.averageStockRotation ?? 0).toFixed(1)" />
+        </div>
+
+        @if (stockTopSeries().length) {
+          <app-card class="dashboard__chart">
+            <p class="t-h3 dashboard__chart-title">Quantités en alerte</p>
+            <app-bar-chart [data]="stockTopSeries()" [height]="260" />
+          </app-card>
+        }
+
+        @if (st.alerts?.length) {
+          <app-card class="dashboard__alerts">
+            <p class="t-h3 dashboard__chart-title">Alertes stock</p>
+            <div class="dashboard__alert-list">
+              @for (a of (st.alerts ?? []).slice(0, 6); track a.productId) {
+                <div class="dashboard__alert-row">
+                  <div>
+                    <p class="t-body-strong">{{ a.productName }}</p>
+                    <p class="t-caption">{{ a.warehouseName }} · Qté {{ a.currentQuantity }} / min {{ a.minQuantity }}</p>
+                  </div>
+                  <app-badge tone="danger">{{ a.alertType }}</app-badge>
+                </div>
+              }
+            </div>
+          </app-card>
+        }
+      } @else {
+        <app-empty-state icon="boxes" title="Aucune donnée de stock" />
+      }
+    }
+  }
+
+  @if (!financial() && !sales() && !stock() && !financialError() && !salesError() && !stockError()) {
+    <app-empty-state icon="layout-dashboard" title="Aucune donnée disponible"
+                      message="Vos accès ne donnent pas encore droit à un tableau de bord." />
+  }
+}

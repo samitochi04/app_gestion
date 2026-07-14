@@ -1,0 +1,12 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <app-form-field label="Nom" [required]="true"
+    [error]="submitted() && form.controls.name.invalid ? 'Le nom est requis.' : ''">
+    <app-text-input formControlName="name" />
+  </app-form-field>
+  <app-form-field label="Description">
+    <app-text-input formControlName="description" />
+  </app-form-field>
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

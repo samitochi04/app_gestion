@@ -1,0 +1,25 @@
+<app-page-header title="Clients" description="Répertoire des clients.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button variant="secondary" (pressed)="openFilters()">
+    <app-icon name="filter" [size]="16" />
+    Filtres@if (activeFilterCount() > 0) { <span> ({{ activeFilterCount() }})</span> }
+  </app-button>
+  <app-button (pressed)="create()">+ Nouveau</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="customers()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucun client" [canView]="false"
+      (edit)="edit($event)" (delete)="remove($event)"
+    />
+  </div>
+  <div class="table-footer">
+    <app-paginator
+      [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+      (pageChange)="onPageChange($event)"
+    />
+  </div>
+</app-card>

@@ -1,0 +1,7 @@
+.confirm { display: flex; flex-direction: column; gap: var(--space-5); }
+.confirm__icon {
+  width: 44px; height: 44px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+}
+.confirm__icon--danger { background: var(--color-danger-tint); color: var(--color-danger); }
+.confirm__actions { display: flex; justify-content: flex-end; gap: var(--space-3); }

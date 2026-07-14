@@ -1,0 +1,31 @@
+<app-page-header title="Factures" description="Facturation clients et suivi des règlements.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button variant="secondary" (pressed)="openFilters()">
+    <app-icon name="filter" [size]="16" />
+    Filtres@if (activeFilterCount() > 0) { <span> ({{ activeFilterCount() }})</span> }
+  </app-button>
+  <app-button (pressed)="create()">+ Nouveau</app-button>
+</app-page-header>
+
+<app-alert-banner
+  [tone]="invoiceBannerTone()"
+  [title]="invoiceAlerts().length > 0 ? 'Attention requise sur la facturation' : 'Facturation à jour'"
+  [message]="invoiceBannerMessage()"
+/>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="invoices()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucune facture" [canView]="false" [canDelete]="false"
+      (edit)="edit($event)"
+    />
+  </div>
+  <div class="table-footer">
+    <app-paginator
+      [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+      (pageChange)="onPageChange($event)"
+    />
+  </div>
+</app-card>

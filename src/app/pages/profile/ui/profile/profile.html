@@ -1,0 +1,37 @@
+<app-page-header title="Profil" description="Vos informations de compte et vos accès." />
+
+<div class="profile__grid">
+  <app-card>
+    <p class="t-micro">Informations</p>
+    <div class="profile__info">
+      <div class="profile__avatar">{{ (user()?.firstName?.[0] ?? '') + (user()?.lastName?.[0] ?? '') }}</div>
+      <div>
+        <p class="t-h3">{{ user()?.fullName }}</p>
+        <p class="t-caption">{{ user()?.email }}</p>
+      </div>
+    </div>
+
+    <p class="t-micro profile__section">Rôles</p>
+    <div class="profile__chips">
+      @for (r of user()?.roles ?? []; track r) { <app-badge tone="info">{{ r }}</app-badge> }
+      @if (!(user()?.roles?.length)) { <p class="t-caption">Aucun rôle assigné.</p> }
+    </div>
+
+    <app-button variant="secondary" (pressed)="logout()" class="profile__logout">Déconnexion</app-button>
+  </app-card>
+
+  <app-card>
+    <p class="t-micro">Modifier le mot de passe</p>
+    <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="profile__form">
+      <app-form-field label="Mot de passe actuel" [required]="true"
+        [error]="submitted() && passwordForm.controls.currentPassword.invalid ? 'Requis.' : ''">
+        <app-text-input type="password" autocomplete="current-password" formControlName="currentPassword" />
+      </app-form-field>
+      <app-form-field label="Nouveau mot de passe" [required]="true"
+        [error]="submitted() && passwordForm.controls.newPassword.invalid ? 'Au moins 8 caractères.' : ''">
+        <app-text-input type="password" autocomplete="new-password" formControlName="newPassword" />
+      </app-form-field>
+      <app-button type="submit" [loading]="saving()">Enregistrer</app-button>
+    </form>
+  </app-card>
+</div>

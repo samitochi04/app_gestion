@@ -1,0 +1,26 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="row-2">
+    <app-form-field label="Code" [required]="true"
+      [error]="submitted() && form.controls.code.invalid ? 'Le code est requis.' : ''">
+      <app-text-input formControlName="code" />
+    </app-form-field>
+    <app-form-field label="Libellé" [required]="true"
+      [error]="submitted() && form.controls.label.invalid ? 'Le libellé est requis.' : ''">
+      <app-text-input formControlName="label" />
+    </app-form-field>
+  </div>
+  <div class="row-2">
+    <app-form-field label="Classe" [required]="true">
+      <app-text-input formControlName="accountClass" placeholder="Ex: 6" />
+    </app-form-field>
+    <app-form-field label="Type" [required]="true">
+      <app-text-input formControlName="type" placeholder="Ex: CHARGE" />
+    </app-form-field>
+  </div>
+  <app-form-field label="Compte parent">
+    <app-text-input formControlName="parentCode" />
+  </app-form-field>
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

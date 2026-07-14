@@ -1,0 +1,39 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="row-2">
+    <app-form-field label="Client" [required]="true">
+      <app-select [options]="customerOptions()" formControlName="customerId" placeholder="Choisir..." />
+    </app-form-field>
+    <app-form-field label="Valide jusqu’au">
+      <app-date-input formControlName="validUntil" />
+    </app-form-field>
+  </div>
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="mv-line">
+        <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="unitSalePrice" placeholder="Prix" />
+        <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  <app-form-field label="Notes">
+    <app-text-input formControlName="notes" />
+  </app-form-field>
+
+  <div class="form-actions">
+    @if (isEdit && isDraft) {
+      <app-button variant="secondary" type="button" (pressed)="send()">Envoyer</app-button>
+    }
+    @if (isEdit) {
+      <app-button variant="secondary" type="button" (pressed)="convert()">Convertir en commande</app-button>
+    }
+    <app-button type="submit">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

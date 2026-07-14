@@ -1,0 +1,8 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <app-form-field label="Rôle à assigner" [required]="true">
+    <app-select [options]="roleOptions()" formControlName="roleId" placeholder="Choisir un rôle..." />
+  </app-form-field>
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">Assigner</app-button>
+  </div>
+</form>

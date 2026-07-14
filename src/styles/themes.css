@@ -1,0 +1,152 @@
+/* =====================================================================
+   themes.css — semantic COLOR ROLES per theme (design.md §3).
+   ThemeService sets <html data-theme="light|dark|blue|red|orange">.
+   Five discrete themes:
+     light  — neutral canvas + indigo accent (default)
+     dark   — dark canvas + brightened indigo accent
+     blue   — light canvas + blue accent
+     red    — light canvas + red accent
+     orange — light canvas + orange accent
+   Status colors keep a consistent meaning across every theme.
+   ===================================================================== */
+
+/* ---------- Shared status + chart palette (stable across themes) ---------- */
+:root {
+  --color-success: #16a34a;  --color-success-tint: #e7f6ec;
+  --color-warning: #d97706;  --color-warning-tint: #fdf1e3;
+  --color-danger:  #dc2626;  --color-danger-tint:  #fdeaea;
+  --color-info:    #2563eb;  --color-info-tint:    #e8f0fe;
+  --color-neutral: #6b7280;  --color-neutral-tint: #f0f1f3;
+
+  /* Fixed chart series palette (design.md §3 rule 2) */
+  --chart-1: #4f46e5;  /* "current period" — follows primary family */
+  --chart-2: #94a3b8;  /* "previous period" */
+  --chart-3: #16a34a;
+  --chart-4: #d97706;
+
+  /* Per-module accent colors (branding only — never used for status/semantic
+     meaning, which stays on --color-success/warning/danger/info above).
+     Stable across all 5 themes so a module is always recognizable by color. */
+  --module-operations: #0d9488;       --module-operations-tint: #ccfbf1;
+  --module-finance: #b45309;          --module-finance-tint: #fef3c7;
+  --module-administration: #7c3aed;   --module-administration-tint: #ede9fe;
+  --module-reporting: #db2777;        --module-reporting-tint: #fce7f3;
+}
+
+/* ---------- LIGHT (default) ---------- */
+:root,
+[data-theme="light"] {
+  --color-bg-canvas:     #f9fafb;
+  --color-surface:       #ffffff;
+  --color-surface-alt:   #f4f5f7;
+  --color-border-subtle: #e6e8ec;
+
+  --color-primary:       #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-tint:  #eef0fe;
+  --color-on-primary:    #ffffff;
+
+  --color-text-primary:   #111827;
+  --color-text-secondary: #5b6472;
+  --color-text-tertiary:  #9aa1ac;
+
+  --color-focus-ring: rgba(79, 70, 229, 0.35);
+  color-scheme: light;
+}
+
+/* ---------- DARK ---------- */
+[data-theme="dark"] {
+  --color-bg-canvas:     #0f1420;
+  --color-surface:       #1a2130;
+  --color-surface-alt:   #222b3c;
+  --color-border-subtle: #2b3446;
+
+  --color-primary:       #7c74ff;
+  --color-primary-hover: #948dff;
+  --color-primary-tint:  #232447;
+  --color-on-primary:    #0f1420;
+
+  --color-text-primary:   #eef1f6;
+  --color-text-secondary: #a7b0bf;
+  --color-text-tertiary:  #6b7688;
+
+  --color-success-tint: #143224;
+  --color-warning-tint: #33260f;
+  --color-danger-tint:  #3a1717;
+  --color-info-tint:    #14233f;
+  --color-neutral-tint: #232b38;
+
+  --module-operations-tint: #0f2e2a;
+  --module-finance-tint: #33260f;
+  --module-administration-tint: #271f42;
+  --module-reporting-tint: #34172a;
+
+  --color-focus-ring: rgba(124, 116, 255, 0.45);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-pop:  0 4px 8px rgba(0,0,0,0.4), 0 12px 24px rgba(0,0,0,0.55);
+  --shadow-modal:0 8px 16px rgba(0,0,0,0.5), 0 24px 48px rgba(0,0,0,0.6);
+  --chart-2: #64748b;
+  color-scheme: dark;
+}
+
+/* ---------- BLUE (light canvas, blue accent) ---------- */
+[data-theme="blue"] {
+  --color-bg-canvas:     #f7f9fc;
+  --color-surface:       #ffffff;
+  --color-surface-alt:   #eef3fa;
+  --color-border-subtle: #e0e7f0;
+
+  --color-primary:       #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-tint:  #e6effe;
+  --color-on-primary:    #ffffff;
+
+  --color-text-primary:   #0f2544;
+  --color-text-secondary: #51637b;
+  --color-text-tertiary:  #93a1b5;
+  --color-focus-ring: rgba(37, 99, 235, 0.35);
+  --chart-1: #2563eb;
+  color-scheme: light;
+}
+
+/* ---------- RED (light canvas, red accent) ---------- */
+[data-theme="red"] {
+  --color-bg-canvas:     #fbf9f9;
+  --color-surface:       #ffffff;
+  --color-surface-alt:   #f8eef0;
+  --color-border-subtle: #efe1e3;
+
+  --color-primary:       #dc2626;
+  --color-primary-hover: #b91c1c;
+  --color-primary-tint:  #fdecec;
+  --color-on-primary:    #ffffff;
+
+  --color-text-primary:   #2a1416;
+  --color-text-secondary: #715257;
+  --color-text-tertiary:  #b39aa0;
+  --color-focus-ring: rgba(220, 38, 38, 0.32);
+  --chart-1: #dc2626;
+  /* keep danger distinguishable from the red accent for status use */
+  --color-danger: #b3161a; --color-danger-tint: #f7e3e3;
+  color-scheme: light;
+}
+
+/* ---------- ORANGE (light canvas, orange accent) ---------- */
+[data-theme="orange"] {
+  --color-bg-canvas:     #fbfaf7;
+  --color-surface:       #ffffff;
+  --color-surface-alt:   #f7f1e9;
+  --color-border-subtle: #eee3d5;
+
+  --color-primary:       #ea580c;
+  --color-primary-hover: #c2410c;
+  --color-primary-tint:  #fdefe4;
+  --color-on-primary:    #ffffff;
+
+  --color-text-primary:   #2a1a0f;
+  --color-text-secondary: #745a48;
+  --color-text-tertiary:  #b6a08d;
+  --color-focus-ring: rgba(234, 88, 12, 0.32);
+  --chart-1: #ea580c;
+  color-scheme: light;
+}

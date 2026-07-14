@@ -1,0 +1,15 @@
+.paginator {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: var(--space-4);
+}
+.paginator__controls { display: flex; align-items: center; gap: var(--space-3); }
+.paginator__btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--color-text-secondary);
+}
+.paginator__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.paginator__btn:not(:disabled):hover { background: var(--color-surface-alt); }

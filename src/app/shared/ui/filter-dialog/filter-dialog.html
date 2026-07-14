@@ -1,0 +1,22 @@
+<form [formGroup]="form" (ngSubmit)="apply()">
+  @for (f of fields; track f.key) {
+    <app-form-field [label]="f.label">
+      @switch (f.type) {
+        @case ('select') {
+          <app-select [options]="f.options ?? []" [formControlName]="f.key" [placeholder]="f.placeholder ?? 'Tous'" />
+        }
+        @case ('date') {
+          <app-date-input [formControlName]="f.key" />
+        }
+        @default {
+          <app-text-input [formControlName]="f.key" [placeholder]="f.placeholder ?? ''" />
+        }
+      }
+    </app-form-field>
+  }
+
+  <div class="filter-dialog__actions">
+    <app-button variant="ghost" type="button" (pressed)="reset()">Réinitialiser</app-button>
+    <app-button type="submit">Appliquer</app-button>
+  </div>
+</form>

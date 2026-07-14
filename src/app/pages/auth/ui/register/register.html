@@ -1,0 +1,41 @@
+<div class="auth">
+  <div class="auth__panel">
+    <div class="auth__brand">
+      <span class="auth__logo">K</span>
+      <p class="t-h2">KIT · Gestion</p>
+    </div>
+
+    <h1 class="t-h1 auth__title">Créer un compte</h1>
+    <p class="t-caption auth__subtitle">Renseignez vos informations pour commencer.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth__form">
+      <app-form-field label="Prénom" [required]="true"
+        [error]="submitted() && form.controls.firstName.invalid ? 'Le prénom est requis.' : ''">
+        <app-text-input formControlName="firstName" />
+      </app-form-field>
+
+      <app-form-field label="Nom" [required]="true"
+        [error]="submitted() && form.controls.lastName.invalid ? 'Le nom est requis.' : ''">
+        <app-text-input formControlName="lastName" />
+      </app-form-field>
+
+      <app-form-field label="E-mail" [required]="true"
+        [error]="submitted() && form.controls.email.invalid ? 'Veuillez saisir un e-mail valide.' : ''">
+        <app-text-input type="email" formControlName="email" />
+      </app-form-field>
+
+      <app-form-field label="Mot de passe" [required]="true"
+        [error]="submitted() && form.controls.password.invalid ? 'Au moins 8 caractères.' : ''">
+        <app-text-input type="password" autocomplete="new-password" formControlName="password" />
+      </app-form-field>
+
+      @if (error()) { <p class="auth__error t-caption">{{ error() }}</p> }
+
+      <app-button type="submit" [loading]="loading()" class="auth__submit">Créer mon compte</app-button>
+    </form>
+
+    <p class="t-caption auth__footer">
+      Déjà un compte ? <a routerLink="/login">Se connecter</a>
+    </p>
+  </div>
+</div>

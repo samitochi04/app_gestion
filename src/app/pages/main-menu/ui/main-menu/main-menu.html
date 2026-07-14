@@ -1,0 +1,34 @@
+<div class="menu">
+  <header class="menu__header">
+    <div class="menu__brand">
+      <span class="menu__logo">K</span>
+      <p class="t-h2">KIT · Gestion</p>
+    </div>
+    <div class="menu__header-actions">
+      <app-theme-switcher />
+      <button type="button" class="menu__logout" (click)="logout()">
+        <app-icon name="logout" [size]="17" /> Déconnexion
+      </button>
+    </div>
+  </header>
+
+  <main class="menu__main">
+    <p class="t-caption menu__greeting">Bonjour {{ user()?.firstName }},</p>
+    <h1 class="t-display menu__title">Menu principal</h1>
+    <p class="t-body menu__subtitle">Choisissez un module pour continuer.</p>
+
+    <div class="menu__grid">
+      @for (mod of modules(); track mod.key) {
+        <button type="button" class="menu__card" (click)="open(mod)">
+          <span class="menu__card-icon"
+                [style.background]="mod.accentTintVar ? 'var(' + mod.accentTintVar + ')' : null"
+                [style.color]="mod.accentVar ? 'var(' + mod.accentVar + ')' : null">
+            <app-icon [name]="mod.icon" [size]="24" />
+          </span>
+          <span class="t-h3 menu__card-label">{{ mod.label }}</span>
+          <span class="t-caption menu__card-desc">{{ mod.description }}</span>
+        </button>
+      }
+    </div>
+  </main>
+</div>

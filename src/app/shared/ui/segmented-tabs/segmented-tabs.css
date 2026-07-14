@@ -1,0 +1,16 @@
+.tabs {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-sm);
+  gap: 2px;
+}
+.tabs__item {
+  border: none; background: transparent; cursor: pointer;
+  font-family: inherit; font-size: var(--fs-caption); font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+  padding: 6px var(--space-3);
+  border-radius: 6px;
+  transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
+}
+.tabs__item--active { background: var(--color-surface); color: var(--color-text-primary); box-shadow: var(--shadow-card); }

@@ -1,0 +1,18 @@
+.profile__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-5);
+  max-width: 800px;
+}
+.profile__info { display: flex; align-items: center; gap: var(--space-4); margin: var(--space-3) 0 var(--space-5); }
+.profile__avatar {
+  width: 56px; height: 56px; border-radius: var(--radius-full);
+  background: var(--color-primary-tint); color: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: var(--fw-semibold); font-size: var(--fs-h2);
+  text-transform: uppercase;
+}
+.profile__section { margin-top: var(--space-5); margin-bottom: var(--space-2); }
+.profile__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-6); }
+.profile__logout { width: 100%; }
+.profile__form { display: flex; flex-direction: column; margin-top: var(--space-3); }

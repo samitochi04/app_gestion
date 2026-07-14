@@ -1,0 +1,18 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="row-2">
+    <app-form-field label="Code" [required]="true"
+      [error]="submitted() && form.controls.code.invalid ? 'Le code est requis.' : ''">
+      <app-text-input formControlName="code" />
+    </app-form-field>
+    <app-form-field label="Nom" [required]="true"
+      [error]="submitted() && form.controls.name.invalid ? 'Le nom est requis.' : ''">
+      <app-text-input formControlName="name" />
+    </app-form-field>
+  </div>
+  <app-form-field label="Adresse">
+    <app-text-input formControlName="address" />
+  </app-form-field>
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+  </div>
+</form>

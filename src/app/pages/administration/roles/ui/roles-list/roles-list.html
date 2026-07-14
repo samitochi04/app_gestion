@@ -1,0 +1,15 @@
+<app-page-header title="Rôles" description="Rôles et permissions associées.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouveau</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="roles()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucun rôle" [canView]="false"
+      (edit)="edit($event)" (delete)="remove($event)"
+    />
+  </div>
+</app-card>

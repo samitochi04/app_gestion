@@ -1,0 +1,19 @@
+<app-page-header title="Paramètres" description="Préférences d’affichage de l’application." />
+
+<app-card class="params-card">
+  <p class="t-h3 params-title">Thème</p>
+  <p class="t-caption params-desc">Choisissez l’apparence de l’application.</p>
+  <div class="params-themes">
+    @for (opt of options; track opt.name) {
+      <button
+        type="button"
+        class="params-theme"
+        [class.params-theme--active]="opt.name === themeService.current()"
+        (click)="themeService.setTheme(opt.name)"
+      >
+        <span class="params-theme__swatch" [style.background]="opt.swatch"></span>
+        {{ opt.label }}
+      </button>
+    }
+  </div>
+</app-card>

@@ -1,5 +1,5 @@
-h1 {
-    text-align: center;
-    margin-top: 1rem;
-    font-size: 3rem;
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: var(--color-bg-canvas);
 }

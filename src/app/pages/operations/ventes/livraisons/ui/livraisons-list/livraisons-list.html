@@ -1,0 +1,11 @@
+<app-page-header title="Livraisons" description="Commandes en cours d’acheminement." />
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="orders()" [loading]="loading()"
+      emptyTitle="Aucune livraison en cours" [canDelete]="false" [canView]="false"
+      (edit)="edit($event)"
+    />
+  </div>
+</app-card>

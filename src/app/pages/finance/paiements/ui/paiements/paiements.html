@@ -1,0 +1,31 @@
+<app-page-header title="Paiements" description="Encaissements par facture." />
+
+<app-card>
+  <app-form-field label="Facture">
+    <app-select
+      [options]="invoiceOptions()"
+      [ngModel]="selectedInvoiceId()"
+      (ngModelChange)="onSelectInvoice($event)"
+      placeholder="Choisir une facture..."
+    />
+  </app-form-field>
+</app-card>
+
+<div class="paiements-spacer"></div>
+
+@if (selectedInvoiceId() == null) {
+  <app-empty-state icon="wallet" title="Sélectionnez une facture"
+                    message="Choisissez une facture pour consulter ses paiements." />
+} @else {
+  <app-card [padded]="false">
+    <div class="table-container">
+      <app-data-table
+        [columns]="columns" [rows]="payments()" [loading]="loading()"
+        emptyTitle="Aucun paiement enregistré" [showActions]="false"
+      />
+    </div>
+    <div class="table-footer">
+      <app-button (pressed)="recordPayment()">+ Enregistrer un paiement</app-button>
+    </div>
+  </app-card>
+}

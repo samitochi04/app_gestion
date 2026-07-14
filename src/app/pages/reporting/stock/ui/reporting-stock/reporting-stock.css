@@ -1,0 +1,5 @@
+.rep-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+.rep-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+.rep-chart-title { margin-bottom: var(--space-4); }
+.rep-alert-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-subtle); }
+.rep-alert-row p { margin: 0; }

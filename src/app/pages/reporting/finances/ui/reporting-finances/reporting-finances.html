@@ -1,0 +1,32 @@
+<app-page-header title="Reporting — Finances" description="Vue consolidée de la performance financière.">
+  <app-form-field label="">
+    <app-date-input [ngModel]="from()" (ngModelChange)="from.set($event)" />
+  </app-form-field>
+  <app-form-field label="">
+    <app-date-input [ngModel]="to()" (ngModelChange)="to.set($event)" />
+  </app-form-field>
+  <app-button variant="secondary" (pressed)="exportBilan()">Exporter le bilan</app-button>
+  <app-button variant="secondary" (pressed)="exportCompteResultat()">Exporter le compte de résultat</app-button>
+</app-page-header>
+
+@if (loading()) {
+  <app-loading-skeleton [count]="4" [rowHeight]="90" />
+} @else if (error()) {
+  <app-error-state title="Impossible de charger le reporting financier"
+                    message="Le serveur n’a pas pu répondre. Réessayez."
+                    (retry)="load()" />
+} @else if (data(); as d) {
+  <div class="rep-kpis">
+    <app-kpi-card label="Chiffre d’affaires" [value]="currency(d.totalRevenue)" />
+    <app-kpi-card label="Charges" [value]="currency(d.totalCharges)" />
+    <app-kpi-card label="Résultat net" [value]="currency(d.netResult)" />
+    <app-kpi-card label="Créances en retard" [value]="currency(d.overdueReceivables)" [invert]="true" />
+  </div>
+
+  @if (revenueSeries()[0]?.series?.length) {
+    <app-card class="rep-chart">
+      <p class="t-h3 rep-chart-title">Chiffre d’affaires vs encaissements</p>
+      <app-line-chart [data]="revenueSeries()" [height]="300" />
+    </app-card>
+  }
+}

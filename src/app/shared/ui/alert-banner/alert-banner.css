@@ -1,0 +1,22 @@
+.alert-banner {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  margin-bottom: var(--space-5);
+}
+.alert-banner__body { flex: 1; }
+.alert-banner__body p { margin: 0; }
+.alert-banner__body .t-caption { margin-top: 2px; }
+
+.alert-banner--success { background: var(--color-success-tint); color: var(--color-success); border-color: color-mix(in srgb, var(--color-success) 25%, transparent); }
+.alert-banner--warning { background: var(--color-warning-tint); color: var(--color-warning); border-color: color-mix(in srgb, var(--color-warning) 25%, transparent); }
+.alert-banner--danger  { background: var(--color-danger-tint);  color: var(--color-danger);  border-color: color-mix(in srgb, var(--color-danger) 25%, transparent); }
+.alert-banner--info    { background: var(--color-info-tint);    color: var(--color-info);    border-color: color-mix(in srgb, var(--color-info) 25%, transparent); }
+.alert-banner--neutral { background: var(--color-surface-alt);  color: var(--color-text-secondary); }
+
+.alert-banner--success .t-body-strong,
+.alert-banner--warning .t-body-strong,
+.alert-banner--danger .t-body-strong,
+.alert-banner--info .t-body-strong { color: inherit; }
+.alert-banner p.t-caption { color: inherit; opacity: 0.85; }
