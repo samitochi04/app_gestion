@@ -6,24 +6,39 @@ import { Card } from '../../../../../shared/ui/card/card';
 import { Button } from '../../../../../shared/ui/button/button';
 import { DateInput } from '../../../../../shared/ui/date-input/date-input';
 import { FormField } from '../../../../../shared/ui/form-field/form-field';
+import { Select, SelectOption } from '../../../../../shared/ui/select/select';
 import { LineChart, ChartSeries } from '../../../../../shared/ui/chart/line-chart';
 import { LoadingSkeleton } from '../../../../../shared/ui/loading-skeleton/loading-skeleton';
 import { ErrorState } from '../../../../../shared/ui/error-state/error-state';
 import { DashboardService } from '../../../../dashboard/data/dashboard.service';
 import { FinancialDashboard } from '../../../../dashboard/data/dashboard.model';
-import { AccountingService } from '../../../../finance/comptabilite/data/accounting.service';
+import {
+  ACCOUNTING_EXPORTS, AccountingExport, ExportFormat, ReportingExportService,
+} from '../../../../../core/services/reporting-export.service';
 import { formatMoneyRounded } from '../../../../../core/utils/format';
+
+const DOCUMENT_OPTIONS: SelectOption[] = Object.entries(ACCOUNTING_EXPORTS)
+  .map(([value, label]) => ({ value, label }));
+
+const FORMAT_OPTIONS: SelectOption[] = [
+  { value: 'PDF', label: 'PDF' },
+  { value: 'EXCEL', label: 'Excel' },
+  { value: 'CSV', label: 'CSV' },
+];
 
 @Component({
   selector: 'app-reporting-finances',
   standalone: true,
-  imports: [PageHeader, KpiCard, Card, Button, DateInput, FormField, FormsModule, LineChart, LoadingSkeleton, ErrorState],
+  imports: [
+    FormsModule, PageHeader, KpiCard, Card, Button, DateInput, FormField,
+    Select, LineChart, LoadingSkeleton, ErrorState,
+  ],
   templateUrl: './reporting-finances.html',
   styleUrl: './reporting-finances.css',
 })
 export class ReportingFinances implements OnInit {
   private readonly dashboardService = inject(DashboardService);
-  private readonly accountingService = inject(AccountingService);
+  private readonly exports = inject(ReportingExportService);
 
   loading = signal(true);
   error = signal(false);
@@ -34,6 +49,12 @@ export class ReportingFinances implements OnInit {
   firstOfYear = `${new Date().getFullYear()}-01-01`;
   from = signal(this.firstOfYear);
   to = signal(this.today);
+
+  documentOptions = DOCUMENT_OPTIONS;
+  formatOptions = FORMAT_OPTIONS;
+  document = signal<AccountingExport>('bilan');
+  format = signal<ExportFormat>('PDF');
+  exporting = signal(false);
 
   ngOnInit(): void {
     this.load();
@@ -60,6 +81,14 @@ export class ReportingFinances implements OnInit {
     return formatMoneyRounded(v);
   }
 
-  exportBilan(): void { this.accountingService.exportBilan(this.from(), this.to()); }
-  exportCompteResultat(): void { this.accountingService.exportCompteResultat(this.from(), this.to()); }
+  /** The nine OHADA statements share one window and one format selector. */
+  downloadDocument(): void {
+    this.exporting.set(true);
+    this.exports
+      .accounting(this.document(), { from: this.from(), to: this.to(), format: this.format() })
+      .subscribe({
+        next: () => this.exporting.set(false),
+        error: () => this.exporting.set(false),
+      });
+  }
 }

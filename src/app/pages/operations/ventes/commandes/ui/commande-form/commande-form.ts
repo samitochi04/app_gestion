@@ -21,7 +21,7 @@ export interface CommandeFormData { order?: Order; }
   standalone: true,
   imports: [ReactiveFormsModule, FormField, TextInput, Select, Button, Icon, Badge],
   templateUrl: './commande-form.html',
-  styleUrls: ['../../../../stock/mouvements/ui/mouvement-form/mouvement-form.css', './commande-form.css'],
+  styleUrls: ['../../../../../../shared/ui/line-editor/line-editor.css', './commande-form.css'],
 })
 export class CommandeForm {
   private readonly fb = inject(FormBuilder);

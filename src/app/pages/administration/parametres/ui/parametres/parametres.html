@@ -1,19 +1,134 @@
-<app-page-header title="Paramètres" description="Préférences d’affichage de l’application." />
+<app-page-header title="Paramètres" description="Identité de la société, facturation et préférences d’affichage." />
 
-<app-card class="params-card">
-  <p class="t-h3 params-title">Thème</p>
-  <p class="t-caption params-desc">Choisissez l’apparence de l’application.</p>
-  <div class="params-themes">
-    @for (opt of options; track opt.name) {
-      <button
-        type="button"
-        class="params-theme"
-        [class.params-theme--active]="opt.name === themeService.current()"
-        (click)="themeService.setTheme(opt.name)"
-      >
-        <span class="params-theme__swatch" [style.background]="opt.swatch"></span>
-        {{ opt.label }}
-      </button>
-    }
-  </div>
-</app-card>
+<app-segmented-tabs [options]="tabs" [active]="activeTab()" (selected)="activeTab.set($event)" class="params-tabs" />
+
+@switch (activeTab()) {
+
+  @case ('societe') {
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Identité</p>
+      <p class="t-caption params-desc">Apparaît en en-tête de chaque facture et de chaque état.</p>
+      <form [formGroup]="identityForm" (ngSubmit)="saveIdentity()">
+        <div class="row-2">
+          <app-form-field label="Raison sociale"><app-text-input formControlName="name" /></app-form-field>
+          <app-form-field label="Forme juridique"><app-text-input formControlName="legalForm" /></app-form-field>
+        </div>
+        <app-form-field label="Slogan"><app-text-input formControlName="slogan" /></app-form-field>
+        <div class="form-actions">
+          <app-button type="submit" [loading]="saving()">Enregistrer</app-button>
+        </div>
+      </form>
+    </app-card>
+
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Coordonnées</p>
+      <form [formGroup]="contactForm" (ngSubmit)="saveContact()">
+        <div class="row-2">
+          <app-form-field label="Adresse"><app-text-input formControlName="address" /></app-form-field>
+          <app-form-field label="Ville"><app-text-input formControlName="city" /></app-form-field>
+        </div>
+        <div class="row-2">
+          <app-form-field label="Code postal"><app-text-input formControlName="postalCode" /></app-form-field>
+          <app-form-field label="Pays"><app-text-input formControlName="country" /></app-form-field>
+        </div>
+        <div class="row-2">
+          <app-form-field label="Téléphone"><app-text-input type="tel" formControlName="phone" /></app-form-field>
+          <app-form-field label="Téléphone 2"><app-text-input type="tel" formControlName="phone2" /></app-form-field>
+        </div>
+        <div class="row-2">
+          <app-form-field label="E-mail"><app-text-input type="email" formControlName="email" /></app-form-field>
+          <app-form-field label="Site web"><app-text-input formControlName="website" /></app-form-field>
+        </div>
+        <div class="form-actions">
+          <app-button type="submit" [loading]="saving()">Enregistrer</app-button>
+        </div>
+      </form>
+    </app-card>
+
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Mentions légales</p>
+      <form [formGroup]="legalForm" (ngSubmit)="saveLegal()">
+        <div class="row-3">
+          <app-form-field label="NUI"><app-text-input formControlName="nui" /></app-form-field>
+          <app-form-field label="RCCM"><app-text-input formControlName="rccm" /></app-form-field>
+          <app-form-field label="NIU"><app-text-input formControlName="niu" /></app-form-field>
+        </div>
+        <div class="row-2">
+          <app-form-field label="Régime fiscal"><app-text-input formControlName="taxRegime" /></app-form-field>
+          <app-form-field label="Capital autorisé"><app-text-input type="number" formControlName="authorizedCapital" /></app-form-field>
+        </div>
+        <div class="form-actions">
+          <app-button type="submit" [loading]="saving()">Enregistrer</app-button>
+        </div>
+      </form>
+    </app-card>
+  }
+
+  @case ('facturation') {
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Paramètres de facturation</p>
+      <p class="t-caption params-desc">Valeurs par défaut appliquées aux nouveaux documents.</p>
+      <form [formGroup]="billingForm" (ngSubmit)="saveBilling()">
+        <app-form-field label="Taux de TVA par défaut (%)">
+          <app-text-input type="number" formControlName="defaultVatRate" />
+        </app-form-field>
+        <app-form-field label="Pied de page des factures">
+          <app-text-input formControlName="invoiceFooter" />
+        </app-form-field>
+        <app-form-field label="Conditions de règlement">
+          <app-text-input formControlName="invoiceTerms" />
+        </app-form-field>
+        <div class="form-actions">
+          <app-button type="submit" [loading]="saving()">Enregistrer</app-button>
+        </div>
+      </form>
+    </app-card>
+
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Logo et signature</p>
+      <p class="t-caption params-desc">Imprimés sur les factures et les pro formas.</p>
+      <div class="params-uploads">
+        <div class="params-upload">
+          <p class="t-body-strong">Logo — {{ company()?.hasLogo ? 'défini' : 'absent' }}</p>
+          <label class="params-file">
+            <input type="file" accept="image/*" (change)="onLogoSelected($event)" hidden />
+            <span class="t-caption">Choisir un fichier…</span>
+          </label>
+          @if (company()?.hasLogo) {
+            <app-button variant="secondary" size="sm" (pressed)="removeLogo()">Supprimer</app-button>
+          }
+        </div>
+        <div class="params-upload">
+          <p class="t-body-strong">Signature — {{ company()?.hasSignature ? 'définie' : 'absente' }}</p>
+          <label class="params-file">
+            <input type="file" accept="image/*" (change)="onSignatureSelected($event)" hidden />
+            <span class="t-caption">Choisir un fichier…</span>
+          </label>
+          @if (company()?.hasSignature) {
+            <app-button variant="secondary" size="sm" (pressed)="removeSignature()">Supprimer</app-button>
+          }
+        </div>
+      </div>
+    </app-card>
+  }
+
+  @case ('apparence') {
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Thème</p>
+      <p class="t-caption params-desc">Préférence personnelle, conservée sur cet appareil.</p>
+      <div class="params-themes">
+        @for (opt of options; track opt.name) {
+          <button
+            type="button"
+            class="params-theme"
+            [class.params-theme--active]="opt.name === themeService.current()"
+            (click)="themeService.setTheme(opt.name)"
+          >
+            <span class="params-theme__swatch" [style.background]="opt.swatch"></span>
+            {{ opt.label }}
+          </button>
+        }
+      </div>
+    </app-card>
+  }
+}

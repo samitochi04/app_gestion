@@ -1,0 +1,47 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <app-form-field label="Facture" [required]="true"
+    [error]="submitted() && form.controls.invoiceId.invalid ? 'Choisissez la facture à créditer.' : ''">
+    <app-select [options]="invoiceOptions()" formControlName="invoiceId" placeholder="Choisir..." />
+  </app-form-field>
+
+  <div class="row-2">
+    <app-form-field label="Portée" [required]="true">
+      <app-select [options]="types" formControlName="type" />
+    </app-form-field>
+    <app-form-field label="Nature" [required]="true"
+      [hint]="isReturn() ? 'La marchandise est réintégrée en stock.' : 'Geste commercial : aucun mouvement de stock.'">
+      <app-select [options]="kinds" formControlName="kind" />
+    </app-form-field>
+  </div>
+
+  @if (isReturn()) {
+    <app-form-field label="Entrepôt de retour"
+      hint="Où la marchandise revient. À défaut, l’entrepôt par défaut du backend.">
+      <app-select [options]="warehouseOptions()" formControlName="warehouseId" placeholder="Par défaut" />
+    </app-form-field>
+  }
+
+  <app-form-field label="Motif" [required]="true"
+    [error]="submitted() && form.controls.reason.invalid ? 'Le motif est requis.' : ''">
+    <app-text-input formControlName="reason" />
+  </app-form-field>
+
+  <p class="t-micro mv-lines-title">Lignes à créditer</p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="mv-line">
+        <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="unitPrice" placeholder="Prix" />
+        <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">Créer l’avoir</app-button>
+  </div>
+</form>

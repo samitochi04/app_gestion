@@ -1,9 +1,11 @@
 <app-page-header title="Mouvements de stock" description="Entrées, sorties, ajustements et transferts.">
-  <app-search-input (changed)="movementsSearch.set($event)" />
-  <app-button variant="secondary" (pressed)="openFilters()">
-    <app-icon name="filter" [size]="16" />
-    Filtres@if (activeFilterCount() > 0) { <span> ({{ activeFilterCount() }})</span> }
-  </app-button>
+  <app-search-input (changed)="search.set($event)" />
+  @if (activeTab() === 'mouvements') {
+    <app-button variant="secondary" (pressed)="openFilters()">
+      <app-icon name="filter" [size]="16" />
+      Filtres@if (activeFilterCount() > 0) { <span> ({{ activeFilterCount() }})</span> }
+    </app-button>
+  }
   <app-button (pressed)="create()">+ Nouveau mouvement</app-button>
 </app-page-header>
 
@@ -15,30 +17,59 @@
 
 <app-segmented-tabs [options]="tabs" [active]="activeTab()" (selected)="selectTab($event)" class="mv-page-tabs" />
 
-@if (activeTab() === 'mouvements') {
-  <app-card [padded]="false">
-    <div class="table-container">
-      <app-data-table
-        [columns]="movementColumns" [rows]="movements()" [loading]="loading()"
-        [searchTerm]="movementsSearch()"
-        emptyTitle="Aucun mouvement" [showActions]="false"
-      />
-    </div>
-    <div class="table-footer">
-      <app-paginator
-        [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
-        (pageChange)="onPageChange($event)"
-      />
-    </div>
-  </app-card>
-} @else {
-  <app-card [padded]="false">
-    <div class="table-container">
-      <app-data-table
-        [columns]="stockColumns" [rows]="currentStock()" [loading]="stockLoading()"
-        [searchTerm]="stockSearch()"
-        emptyTitle="Aucune donnée de stock" [showActions]="false"
-      />
-    </div>
-  </app-card>
+@switch (activeTab()) {
+  @case ('mouvements') {
+    <app-card [padded]="false">
+      <div class="table-container">
+        <app-data-table
+          [columns]="movementColumns" [rows]="movements()" [loading]="loading()"
+          [searchTerm]="search()"
+          emptyTitle="Aucun mouvement" [showActions]="false"
+        />
+      </div>
+      <div class="table-footer">
+        <app-paginator
+          [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+          (pageChange)="onPageChange($event)"
+        />
+      </div>
+    </app-card>
+  }
+
+  @case ('stock') {
+    <app-card [padded]="false">
+      <div class="table-container">
+        <app-data-table
+          [columns]="stockColumns" [rows]="currentStock()" [loading]="stockLoading()"
+          [searchTerm]="search()" [actions]="stockActions"
+          emptyTitle="Aucune donnée de stock"
+        />
+      </div>
+    </app-card>
+  }
+
+  @case ('valorisation') {
+    <app-card>
+      <div class="mv-valuation-head">
+        <app-form-field label="À la date du">
+          <app-date-input [ngModel]="valuationDate()" (ngModelChange)="onValuationDate($event)" />
+        </app-form-field>
+        <div class="mv-valuation-kpis">
+          <app-kpi-card label="Valeur du stock" [value]="money(valuation()?.totalStockValue)" />
+          <app-kpi-card label="Valeur de vente" [value]="money(valuation()?.totalSaleValue)" />
+          <app-kpi-card label="Marge potentielle" [value]="money(valuation()?.totalPotentialMargin)" />
+        </div>
+      </div>
+    </app-card>
+
+    <app-card [padded]="false">
+      <div class="table-container">
+        <app-data-table
+          [columns]="valuationColumns" [rows]="valuation()?.lines ?? []" [loading]="valuationLoading()"
+          [searchTerm]="search()"
+          emptyTitle="Aucune ligne de valorisation" [showActions]="false"
+        />
+      </div>
+    </app-card>
+  }
 }

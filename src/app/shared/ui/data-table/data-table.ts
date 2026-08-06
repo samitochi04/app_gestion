@@ -15,6 +15,20 @@ export interface DataTableColumn<T> {
 }
 
 /**
+ * A domain verb offered per row, beyond view/edit/delete — validating an
+ * avoir, deactivating a user, flagging a warehouse. `visible` lets a row hide
+ * an action that its current state forbids, which is what keeps the table from
+ * offering transitions the backend would refuse.
+ */
+export interface DataTableAction<T> {
+  icon: string;
+  label: string;
+  run: (row: T) => void;
+  visible?: (row: T) => boolean;
+  danger?: boolean;
+}
+
+/**
  * Generic list table used across every entity (produits, clients, factures…).
  * Row-level actions (voir/modifier/supprimer) are emitted as events so the
  * parent page decides what to do — typically opening a DialogService modal.
@@ -58,6 +72,14 @@ export interface DataTableColumn<T> {
                 }
                 @if (showActions()) {
                   <td class="table__td--right table__actions" (click)="$event.stopPropagation()">
+                    @for (action of actions(); track action.label) {
+                      @if (!action.visible || action.visible(row)) {
+                        <button class="table__action" [class.table__action--danger]="action.danger"
+                                (click)="action.run(row)" [attr.aria-label]="action.label" [title]="action.label">
+                          <app-icon [name]="action.icon" [size]="16" />
+                        </button>
+                      }
+                    }
                     @if (canView()) {
                       <button class="table__action" (click)="view.emit(row)" aria-label="Voir">
                         <app-icon name="eye" [size]="16" />
@@ -97,6 +119,8 @@ export class DataTable<T> {
   canEdit = input<boolean>(true);
   canDelete = input<boolean>(true);
   showActions = input<boolean>(true);
+  /** Extra per-row verbs, rendered before view/edit/delete. */
+  actions = input<DataTableAction<T>[]>([]);
 
   rowClick = output<T>();
   view = output<T>();

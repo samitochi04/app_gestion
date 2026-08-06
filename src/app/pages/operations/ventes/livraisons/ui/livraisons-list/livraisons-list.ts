@@ -9,6 +9,7 @@ import { documentStatusMeta } from '../../../../../../core/models/status.model';
 import { OrderActions } from '../../../commandes/data/store/order.actions';
 import { selectDeliveryOrders, selectOrdersLoading } from '../../../commandes/data/store/order.selectors';
 import { Order } from '../../../commandes/data/order.model';
+import { CustomerLookupService } from '../../../clients/data/customer-lookup.service';
 import { CommandeForm } from '../../../commandes/ui/commande-form/commande-form';
 
 /**
@@ -25,18 +26,22 @@ import { CommandeForm } from '../../../commandes/ui/commande-form/commande-form'
 export class LivraisonsList implements OnInit {
   private readonly store = inject(Store);
   private readonly dialog = inject(DialogService);
+  private readonly customers = inject(CustomerLookupService);
 
   orders = toSignal(this.store.select(selectDeliveryOrders), { initialValue: [] as Order[] });
   loading = toSignal(this.store.select(selectOrdersLoading), { initialValue: false });
 
   columns: DataTableColumn<Order>[] = [
     { key: 'reference', header: 'Référence', width: '150px' },
-    { key: 'customerId', header: 'Client', cell: (r) => `#${r.customerId}` },
+    { key: 'customerId', header: 'Client', cell: (r) => this.customers.name(r.customerId) },
     { key: 'shippingCity', header: 'Ville' },
     { key: 'status', header: 'Statut', cell: (r) => documentStatusMeta(r.status).label },
   ];
 
-  ngOnInit(): void { this.store.dispatch(OrderActions.loadPage({ page: 0, size: 100 })); }
+  ngOnInit(): void {
+    this.store.dispatch(OrderActions.loadPage({ page: 0, size: 100 }));
+    this.customers.load();
+  }
 
   edit(order: Order): void {
     this.dialog.open(CommandeForm, { title: `Commande ${order.reference}`, size: 'lg', data: { order } });

@@ -122,12 +122,29 @@ export const resetPasswordEffect = createEffect(
   { functional: true, dispatch: false },
 );
 
-/** Clear tokens and return to login. */
+/**
+ * Revoke the refresh token server-side, then clear locally and return to
+ * login. The local clear happens regardless: a failed revocation must never
+ * strand someone in a session they asked to leave.
+ */
 export const logoutEffect = createEffect(
-  (actions$ = inject(Actions), tokens = inject(TokenService), router = inject(Router)) =>
+  (
+    actions$ = inject(Actions),
+    auth = inject(AuthService),
+    tokens = inject(TokenService),
+    router = inject(Router),
+  ) =>
     actions$.pipe(
       ofType(SessionActions.logout),
-      tap(() => { tokens.clear(); router.navigate(['/login']); }),
+      exhaustMap(() => {
+        const refreshToken = tokens.refreshToken;
+        const revoke$ = refreshToken
+          ? auth.logout({ refreshToken }).pipe(catchError(() => of(null)))
+          : of(null);
+        return revoke$.pipe(
+          tap(() => { tokens.clear(); router.navigate(['/login']); }),
+        );
+      }),
     ),
   { functional: true, dispatch: false },
 );

@@ -7,7 +7,7 @@
   <div class="table-container">
     <app-data-table
       [columns]="columns" [rows]="warehouses()" [loading]="loading()"
-      [searchTerm]="searchTerm()"
+      [searchTerm]="searchTerm()" [actions]="actions"
       emptyTitle="Aucun entrepôt" [canView]="false"
       (edit)="edit($event)" (delete)="remove($event)"
     />

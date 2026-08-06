@@ -1,13 +1,4 @@
-<app-page-header title="Reporting — Finances" description="Vue consolidée de la performance financière.">
-  <app-form-field label="">
-    <app-date-input [ngModel]="from()" (ngModelChange)="from.set($event)" />
-  </app-form-field>
-  <app-form-field label="">
-    <app-date-input [ngModel]="to()" (ngModelChange)="to.set($event)" />
-  </app-form-field>
-  <app-button variant="secondary" (pressed)="exportBilan()">Exporter le bilan</app-button>
-  <app-button variant="secondary" (pressed)="exportCompteResultat()">Exporter le compte de résultat</app-button>
-</app-page-header>
+<app-page-header title="Reporting — Finances" description="Vue consolidée de la performance financière et états OHADA." />
 
 @if (loading()) {
   <app-loading-skeleton [count]="4" [rowHeight]="90" />
@@ -30,3 +21,23 @@
     </app-card>
   }
 }
+
+<app-card class="rep-exports">
+  <p class="t-h3 rep-chart-title">États et exports</p>
+  <p class="t-caption">Bilan, compte de résultat, balances et journaux, sur la période choisie.</p>
+  <div class="rep-export-row">
+    <app-form-field label="Document">
+      <app-select [options]="documentOptions" [ngModel]="document()" (ngModelChange)="document.set($event)" />
+    </app-form-field>
+    <app-form-field label="Du">
+      <app-date-input [ngModel]="from()" (ngModelChange)="from.set($event)" />
+    </app-form-field>
+    <app-form-field label="Au">
+      <app-date-input [ngModel]="to()" (ngModelChange)="to.set($event)" />
+    </app-form-field>
+    <app-form-field label="Format">
+      <app-select [options]="formatOptions" [ngModel]="format()" (ngModelChange)="format.set($event)" />
+    </app-form-field>
+    <app-button [loading]="exporting()" (pressed)="downloadDocument()">Télécharger</app-button>
+  </div>
+</app-card>

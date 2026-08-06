@@ -1,0 +1,29 @@
+## structure de la sidebar:
+
+- Tableau de bord
+- Operations
+    - Stocks
+        - Produits
+        - Categories
+        - Movement
+        - Entrepots
+    - Ventes
+        - Clients
+        - Devis
+        - Commandes
+        - livraisons
+    - Finance
+        - Factures
+        - avoirs
+        - paiments
+        - Comptabilité
+- reporting
+    - Finance
+    - Stocks
+    - Ventes
+- Administration
+    - Utilisateurs
+    - Roles
+    - Audit
+    - parametres
+- Profile

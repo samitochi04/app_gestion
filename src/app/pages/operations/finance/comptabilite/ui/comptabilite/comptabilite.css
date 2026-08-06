@@ -1,0 +1,28 @@
+.compta-tabs { display: block; margin-bottom: var(--space-5); }
+.compta-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); }
+.compta-filters { margin-bottom: var(--space-4); }
+.compta-filter-row {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: var(--space-4); flex-wrap: wrap;
+}
+.compta-filter-row app-form-field { flex: 1; min-width: 200px; }
+.period-row {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.period-row p { margin: 0; }
+.period-row > div:first-child { flex: 1; }
+.period-empty { padding: var(--space-6); text-align: center; }
+
+.compta-inbox-head {
+  display: flex; flex-wrap: wrap; gap: var(--space-4);
+  align-items: flex-end; justify-content: space-between;
+}
+.compta-inbox-kpis {
+  display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: var(--space-3); flex: 1; min-width: 260px;
+}
+@media (max-width: 720px) {
+  .compta-inbox-kpis { grid-template-columns: 1fr; }
+}

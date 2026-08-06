@@ -1,0 +1,57 @@
+<app-page-header title="Factures" description="Facturation clients et suivi des règlements.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  @if (view() === 'invoices') {
+    <app-button variant="secondary" (pressed)="openFilters()">
+      <app-icon name="filter" [size]="16" />
+      Filtres@if (activeFilterCount() > 0) { <span> ({{ activeFilterCount() }})</span> }
+    </app-button>
+  }
+  <app-button (pressed)="createProForma()">+ Nouvelle pro forma</app-button>
+</app-page-header>
+
+<app-segmented-tabs [options]="views" [active]="view()" (selected)="switchView($event)" />
+
+@if (view() === 'invoices') {
+  <app-alert-banner
+    [tone]="invoiceBannerTone()"
+    [title]="invoiceAlerts().length > 0 ? 'Attention requise sur la facturation' : 'Facturation à jour'"
+    [message]="invoiceBannerMessage()"
+  />
+
+  <app-card [padded]="false">
+    <div class="table-container">
+      <app-data-table
+        [columns]="invoiceColumns" [rows]="invoices()" [loading]="loading()"
+        [searchTerm]="searchTerm()"
+        emptyTitle="Aucune facture"
+        emptyMessage="Une facture naît d’une commande expédiée ou d’une pro forma convertie."
+        [canView]="false" [canDelete]="false"
+        (edit)="openInvoice($event)"
+      />
+    </div>
+    <div class="table-footer">
+      <app-paginator
+        [page]="page()" [size]="size()" [totalElements]="totalElements()" [totalPages]="totalPages()"
+        (pageChange)="onPageChange($event)"
+      />
+    </div>
+  </app-card>
+} @else {
+  <app-alert-banner
+    tone="info"
+    title="Pro formas"
+    message="Une pro forma convertie produit une facture en brouillon. C’est, avec l’expédition d’une commande, la seule origine d’une facture de vente."
+  />
+
+  <app-card [padded]="false">
+    <div class="table-container">
+      <app-data-table
+        [columns]="proFormaColumns" [rows]="proFormas()" [loading]="proFormasLoading()"
+        [searchTerm]="searchTerm()"
+        emptyTitle="Aucune pro forma"
+        [canView]="false" [canDelete]="false"
+        (edit)="openProForma($event)"
+      />
+    </div>
+  </app-card>
+}

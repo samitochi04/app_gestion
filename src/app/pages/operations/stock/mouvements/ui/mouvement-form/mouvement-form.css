@@ -1,24 +1,6 @@
-.mv-tabs { margin-bottom: var(--space-5); }
-.mv-lines-title { margin-bottom: var(--space-2); }
-.mv-lines { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-2); }
-.mv-line {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  gap: var(--space-2);
-  align-items: center;
+/* Reception lines carry two extra quantities (avariés, manquants). */
+.mv-line--receive { grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; }
+.mv-hint { margin: 0 0 var(--space-4); color: var(--color-text-tertiary); }
+@media (max-width: 780px) {
+  .mv-line--receive { grid-template-columns: 1fr 1fr auto; }
 }
-.mv-line__remove {
-  background: none; border: none; cursor: pointer;
-  color: var(--color-text-tertiary);
-  padding: var(--space-2);
-  border-radius: var(--radius-sm);
-}
-.mv-line__remove:hover { background: var(--color-danger-tint); color: var(--color-danger); }
-.mv-add-line {
-  background: none; border: 1px dashed var(--color-border-subtle); cursor: pointer;
-  color: var(--color-text-secondary);
-  padding: var(--space-2); border-radius: var(--radius-sm);
-  width: 100%; margin-bottom: var(--space-5);
-  font-size: var(--fs-caption); font-family: inherit;
-}
-.mv-add-line:hover { background: var(--color-surface-alt); color: var(--color-primary); }

@@ -1,0 +1,65 @@
+@if (loading()) {
+  <p class="t-caption">Chargement de l’échéancier…</p>
+} @else if (hasSchedule()) {
+  <div class="cmd-status-row">
+    <app-badge [tone]="statusTone(schedule()!.status)">{{ statusLabel(schedule()!.status) }}</app-badge>
+    <span class="t-caption">Restant dû : {{ money(invoice.remainingAmount) }}</span>
+  </div>
+
+  <p class="t-micro mv-lines-title">Échéances</p>
+  <ul class="sched-list">
+    @for (inst of schedule()!.installments; track inst.id) {
+      <li class="sched-row">
+        <span class="t-caption">{{ inst.dueDate }}</span>
+        <span class="t-caption">{{ money(inst.amount) }}</span>
+        <app-badge [tone]="statusTone(inst.status)">{{ statusLabel(inst.status) }}</app-badge>
+        @if (inst.status !== 'PAID') {
+          <app-button variant="secondary" type="button" [disabled]="saving()" (pressed)="pay(inst)">Régler</app-button>
+        } @else {
+          <span class="t-caption sched-paid">Réglée</span>
+        }
+      </li>
+    }
+  </ul>
+
+  <form [formGroup]="settle" class="sched-settle">
+    <p class="t-micro mv-lines-title">Paramètres du règlement</p>
+    <div class="row-3">
+      <app-form-field label="Montant" hint="0 = montant de l’échéance">
+        <app-text-input type="number" formControlName="amount" />
+      </app-form-field>
+      <app-form-field label="Mode">
+        <app-select [options]="methods" formControlName="method" />
+      </app-form-field>
+      <app-form-field label="Référence">
+        <app-text-input formControlName="reference" />
+      </app-form-field>
+    </div>
+  </form>
+} @else {
+  <p class="t-caption">Aucun échéancier. Répartissez le montant de la facture ci-dessous.</p>
+
+  <form [formGroup]="form" (ngSubmit)="create()">
+    <p class="t-micro mv-lines-title">Échéances</p>
+    <div formArrayName="installments" class="mv-lines">
+      @for (inst of draft.controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="sched-draft-row">
+          <app-date-input formControlName="dueDate" />
+          <app-text-input type="number" formControlName="amount" placeholder="Montant" />
+          <button type="button" class="mv-line__remove" (click)="removeInstallment(i)" aria-label="Retirer l’échéance">
+            <app-icon name="x" [size]="16" />
+          </button>
+        </div>
+      }
+    </div>
+    <button type="button" class="mv-add-line" (click)="addInstallment()">+ Ajouter une échéance</button>
+
+    <p class="t-caption sched-total">
+      Total réparti : {{ money(plannedTotal()) }} · Total facture : {{ money(invoice.totalAmountTTC) }}
+    </p>
+
+    <div class="form-actions">
+      <app-button type="submit" [disabled]="saving()">Créer l’échéancier</app-button>
+    </div>
+  </form>
+}

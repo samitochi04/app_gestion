@@ -40,8 +40,9 @@ export class EntrepotForm {
     if (this.form.invalid) return;
     const v = this.form.getRawValue();
     this.saving.set(true);
+    // `code` identifies the warehouse and is not part of the update command.
     const req$ = this.isEdit
-      ? this.service.update(this.data.warehouse!.id, { code: v.code!, name: v.name!, address: v.address ?? '' })
+      ? this.service.update(this.data.warehouse!.id, { name: v.name!, address: v.address ?? '' })
       : this.service.create({ code: v.code!, name: v.name!, address: v.address ?? '' });
 
     req$.subscribe({

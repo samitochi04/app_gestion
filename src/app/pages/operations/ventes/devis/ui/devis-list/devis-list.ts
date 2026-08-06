@@ -17,13 +17,16 @@ import {
   selectQuotesSize, selectQuotesTotalElements, selectQuotesTotalPages,
 } from '../../data/store/quote.selectors';
 import { Quote } from '../../data/quote.model';
+import { CustomerLookupService } from '../../../clients/data/customer-lookup.service';
 import { DevisForm } from '../devis-form/devis-form';
 import { formatMoney } from '../../../../../../core/utils/format';
 
+/** Backend `QuoteStatus` values, in lifecycle order. */
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Brouillon' },
   { value: 'SENT', label: 'Envoyé' },
-  { value: 'VALIDATED', label: 'Validé' },
+  { value: 'ACCEPTED', label: 'Accepté' },
+  { value: 'REJECTED', label: 'Refusé' },
   { value: 'CONVERTED', label: 'Converti' },
   { value: 'EXPIRED', label: 'Expiré' },
 ];
@@ -37,6 +40,7 @@ const STATUS_OPTIONS = [
 export class DevisList implements OnInit {
   private readonly store = inject(Store);
   private readonly dialog = inject(DialogService);
+  private readonly customers = inject(CustomerLookupService);
 
   quotes = toSignal(this.store.select(selectAllQuotes), { initialValue: [] as Quote[] });
   loading = toSignal(this.store.select(selectQuotesLoading), { initialValue: false });
@@ -50,13 +54,16 @@ export class DevisList implements OnInit {
 
   columns: DataTableColumn<Quote>[] = [
     { key: 'reference', header: 'Référence', width: '150px' },
-    { key: 'customerId', header: 'Client', cell: (r) => `#${r.customerId}` },
+    { key: 'customerId', header: 'Client', cell: (r) => this.customers.name(r.customerId) },
     { key: 'status', header: 'Statut', cell: (r) => documentStatusMeta(r.status).label },
     { key: 'totalAmountTTC', header: 'Total TTC', align: 'right', cell: (r) => formatMoney(r.totalAmountTTC) },
     { key: 'validUntil', header: 'Valide jusqu’au' },
   ];
 
-  ngOnInit(): void { this.store.dispatch(QuoteActions.loadPage({ page: 0 })); }
+  ngOnInit(): void {
+    this.store.dispatch(QuoteActions.loadPage({ page: 0 }));
+    this.customers.load();
+  }
   onPageChange(page: number): void { this.store.dispatch(QuoteActions.loadPage({ page })); }
 
   openFilters(): void {

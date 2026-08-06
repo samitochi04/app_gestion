@@ -20,7 +20,7 @@ export interface DevisFormData { quote?: Quote; }
   standalone: true,
   imports: [ReactiveFormsModule, FormField, TextInput, Select, DateInput, Button, Icon],
   templateUrl: './devis-form.html',
-  styleUrl: '../../../../stock/mouvements/ui/mouvement-form/mouvement-form.css',
+  styleUrl: '../../../../../../shared/ui/line-editor/line-editor.css',
 })
 export class DevisForm {
   private readonly fb = inject(FormBuilder);

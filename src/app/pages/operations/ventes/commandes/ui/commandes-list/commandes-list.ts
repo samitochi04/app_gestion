@@ -17,6 +17,7 @@ import {
   selectOrdersSize, selectOrdersTotalElements, selectOrdersTotalPages,
 } from '../../data/store/order.selectors';
 import { Order } from '../../data/order.model';
+import { CustomerLookupService } from '../../../clients/data/customer-lookup.service';
 import { CommandeForm } from '../commande-form/commande-form';
 import { formatMoney } from '../../../../../../core/utils/format';
 
@@ -38,6 +39,7 @@ const STATUS_OPTIONS = [
 export class CommandesList implements OnInit {
   private readonly store = inject(Store);
   private readonly dialog = inject(DialogService);
+  private readonly customers = inject(CustomerLookupService);
 
   orders = toSignal(this.store.select(selectAllOrders), { initialValue: [] as Order[] });
   loading = toSignal(this.store.select(selectOrdersLoading), { initialValue: false });
@@ -51,13 +53,16 @@ export class CommandesList implements OnInit {
 
   columns: DataTableColumn<Order>[] = [
     { key: 'reference', header: 'Référence', width: '150px' },
-    { key: 'customerId', header: 'Client', cell: (r) => `#${r.customerId}` },
+    { key: 'customerId', header: 'Client', cell: (r) => this.customers.name(r.customerId) },
     { key: 'status', header: 'Statut', cell: (r) => documentStatusMeta(r.status).label },
     { key: 'totalAmountTTC', header: 'Total TTC', align: 'right', cell: (r) => formatMoney(r.totalAmountTTC) },
     { key: 'createdAt', header: 'Date', cell: (r) => new Date(r.createdAt).toLocaleDateString('fr-FR') },
   ];
 
-  ngOnInit(): void { this.store.dispatch(OrderActions.loadPage({ page: 0 })); }
+  ngOnInit(): void {
+    this.store.dispatch(OrderActions.loadPage({ page: 0 }));
+    this.customers.load();
+  }
   onPageChange(page: number): void { this.store.dispatch(OrderActions.loadPage({ page })); }
 
   openFilters(): void {

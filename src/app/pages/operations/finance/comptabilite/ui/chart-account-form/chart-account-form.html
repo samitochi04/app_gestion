@@ -1,0 +1,34 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  @if (isEdit) {
+    <p class="t-caption ca-note">
+      Seul le libellé est modifiable : le code identifie le compte dans tout le plan.
+    </p>
+  }
+
+  <div class="row-2">
+    <app-form-field label="Code" [required]="true"
+      hint="1 à 7 chiffres. La classe se déduit du premier chiffre."
+      [error]="submitted() && form.controls.code.invalid ? 'Code requis (chiffres uniquement).' : ''">
+      <app-text-input formControlName="code" placeholder="701" />
+    </app-form-field>
+    <app-form-field label="Compte parent" hint="Vide pour un compte de premier niveau.">
+      <app-text-input formControlName="parentCode" placeholder="70" />
+    </app-form-field>
+  </div>
+
+  <app-form-field label="Libellé" [required]="true"
+    [error]="submitted() && form.controls.label.invalid ? 'Libellé requis.' : ''">
+    <app-text-input formControlName="label" />
+  </app-form-field>
+
+  @if (!isEdit) {
+    <label class="ca-checkbox">
+      <input type="checkbox" formControlName="isParent" />
+      <span class="t-caption">Compte de regroupement (ne reçoit pas d’écriture)</span>
+    </label>
+  }
+
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">{{ isEdit ? 'Enregistrer' : 'Créer le compte' }}</app-button>
+  </div>
+</form>

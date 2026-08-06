@@ -23,6 +23,14 @@ export class AuthService {
     return this.api.post<TokenResponse>('/api/auth/refresh', body);
   }
 
+  /**
+   * Revokes the refresh token server-side. The access token stays valid until
+   * it expires, so the client must clear it too — see `logoutEffect`.
+   */
+  logout(body: RefreshRequest): Observable<unknown> {
+    return this.api.post('/api/auth/logout', body);
+  }
+
   forgotPassword(body: ForgotPasswordRequest): Observable<unknown> {
     return this.api.post('/api/auth/forgot-password', body);
   }

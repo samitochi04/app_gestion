@@ -40,9 +40,30 @@
             <p class="t-body-strong">{{ a.productName }}</p>
             <p class="t-caption">{{ a.warehouseName }} · {{ a.currentQuantity }} / min {{ a.minQuantity }}</p>
           </div>
-          <app-badge tone="danger">{{ a.alertType }}</app-badge>
+          <app-badge [tone]="alertTone(a.alertType)">{{ a.alertType }}</app-badge>
         </div>
       }
     </app-card>
   }
 }
+
+<app-card class="rep-exports">
+  <p class="t-h3 rep-chart-title">État de stock</p>
+  <p class="t-caption">Situation des quantités et de leur valorisation sur la période.</p>
+  <div class="rep-export-row">
+    <app-form-field label="Du">
+      <app-date-input [ngModel]="from()" (ngModelChange)="from.set($event)" />
+    </app-form-field>
+    <app-form-field label="Au">
+      <app-date-input [ngModel]="to()" (ngModelChange)="to.set($event)" />
+    </app-form-field>
+    <app-form-field label="Entrepôt">
+      <app-select [options]="warehouseOptions()" [ngModel]="warehouseId()"
+                  (ngModelChange)="warehouseId.set($event)" placeholder="Tous" />
+    </app-form-field>
+    <app-form-field label="Format">
+      <app-select [options]="formatOptions" [ngModel]="format()" (ngModelChange)="format.set($event)" />
+    </app-form-field>
+    <app-button [loading]="exporting()" (pressed)="downloadStockReport()">Télécharger</app-button>
+  </div>
+</app-card>

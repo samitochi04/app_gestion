@@ -34,15 +34,29 @@ export class ApiService {
     return this.get<PageResponse<T>>(path, query);
   }
 
-  post<T>(path: string, body?: unknown): Observable<T> {
+  /**
+   * `query` matters more than it looks: several backend endpoints take their
+   * arguments as query parameters rather than a body (e.g. creating a chart
+   * account, sending an invoice, closing a period).
+   */
+  post<T>(path: string, body?: unknown, query?: PageQuery): Observable<T> {
     return this.http
-      .post<ApiResponse<T>>(this.url(path), body ?? {})
+      .post<ApiResponse<T>>(this.url(path), body ?? {}, { params: this.toParams(query) })
       .pipe(map((r) => this.unwrap(r)), catchError(this.fail));
   }
 
-  put<T>(path: string, body?: unknown): Observable<T> {
+  put<T>(path: string, body?: unknown, query?: PageQuery): Observable<T> {
     return this.http
-      .put<ApiResponse<T>>(this.url(path), body ?? {})
+      .put<ApiResponse<T>>(this.url(path), body ?? {}, { params: this.toParams(query) })
+      .pipe(map((r) => this.unwrap(r)), catchError(this.fail));
+  }
+
+  /** Multipart upload (CSV/Excel imports, company logo). */
+  upload<T>(path: string, file: File, query?: PageQuery, field = 'file'): Observable<T> {
+    const form = new FormData();
+    form.append(field, file, file.name);
+    return this.http
+      .post<ApiResponse<T>>(this.url(path), form, { params: this.toParams(query) })
       .pipe(map((r) => this.unwrap(r)), catchError(this.fail));
   }
 

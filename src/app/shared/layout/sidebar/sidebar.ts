@@ -1,75 +1,18 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs/operators';
 import { Icon } from '../../ui/icon/icon';
 import { SidebarItem } from '../sidebar-item/sidebar-item';
 import { selectPermissions } from '../../../core/store/session/session.selectors';
-import { Permission } from '../../../core/models/permission.enum';
-import { toSignal } from '@angular/core/rxjs-interop';
-
-interface NavChild { label: string; route: string; }
-interface NavGroup { key: string; label: string; icon: string; accent: string; anyOf: string[]; children: NavChild[]; }
+import { NAV_DASHBOARD, NAV_PROFILE, NavSection, visibleSections } from './sidebar.nav';
 
 /**
- * Sidebar navigation groups, matching the requested structure exactly:
- * Dashboard · Opérations(Stock/Ventes) · Finances · Administration · Reporting · Profil.
- * Each group only renders if the user holds at least one of `anyOf`'s permissions.
- * `accent` is a per-module branding color (themes.css) — visual differentiation
- * only, never used for status/semantic meaning.
+ * Three-level navigation: section → group → link, as declared in
+ * `sidebar.nav.ts`. The section holding the current route opens on load, so a
+ * refresh or a deep link never lands on a collapsed tree.
  */
-const NAV_GROUPS: NavGroup[] = [
-  {
-    key: 'operations', label: 'Opérations', icon: 'boxes', accent: 'var(--module-operations)',
-    anyOf: [
-      Permission.PRODUCT_READ, Permission.CATEGORY_READ, Permission.WAREHOUSE_READ,
-      Permission.MOVEMENT_READ, Permission.CUSTOMER_READ, Permission.QUOTE_READ,
-      Permission.ORDER_READ, Permission.DELIVERY_READ,
-    ],
-    children: [
-      { label: 'Produits', route: '/app/operations/stock/produits' },
-      { label: 'Catégories', route: '/app/operations/stock/categories' },
-      { label: 'Mouvements', route: '/app/operations/stock/mouvements' },
-      { label: 'Entrepôts', route: '/app/operations/stock/entrepots' },
-      { label: 'Clients', route: '/app/operations/ventes/clients' },
-      { label: 'Devis', route: '/app/operations/ventes/devis' },
-      { label: 'Commandes', route: '/app/operations/ventes/commandes' },
-      { label: 'Livraisons', route: '/app/operations/ventes/livraisons' },
-    ],
-  },
-  {
-    key: 'finance', label: 'Finances', icon: 'wallet', accent: 'var(--module-finance)',
-    anyOf: [Permission.INVOICE_READ, Permission.PAYMENT_READ],
-    children: [
-      { label: 'Factures', route: '/app/finance/factures' },
-      { label: 'Avoirs', route: '/app/finance/avoirs' },
-      { label: 'Paiements', route: '/app/finance/paiements' },
-      { label: 'Comptabilité', route: '/app/finance/comptabilite' },
-    ],
-  },
-  {
-    key: 'administration', label: 'Administration', icon: 'shield', accent: 'var(--module-administration)',
-    anyOf: [Permission.USER_READ, Permission.ROLE_READ, Permission.PERMISSION_READ],
-    children: [
-      { label: 'Utilisateurs', route: '/app/administration/utilisateurs' },
-      { label: 'Rôles', route: '/app/administration/roles' },
-      { label: 'Audit', route: '/app/administration/audit' },
-      { label: 'Paramètres', route: '/app/administration/parametres' },
-    ],
-  },
-  {
-    key: 'reporting', label: 'Reporting', icon: 'bar-chart', accent: 'var(--module-reporting)',
-    anyOf: [
-      Permission.PRODUCT_READ, Permission.MOVEMENT_READ, Permission.INVOICE_READ,
-      Permission.ORDER_READ, Permission.QUOTE_READ,
-    ],
-    children: [
-      { label: 'Finances', route: '/app/reporting/finances' },
-      { label: 'Stock', route: '/app/reporting/stock' },
-      { label: 'Ventes', route: '/app/reporting/ventes' },
-    ],
-  },
-];
-
 @Component({
   selector: 'app-sidebar',
   standalone: true,
@@ -91,42 +34,64 @@ const NAV_GROUPS: NavGroup[] = [
         </button>
       </div>
 
-      <nav class="sidebar__nav u-scroll">
-        <app-sidebar-item icon="layout-dashboard" label="Tableau de bord"
-                           route="/app/dashboard" [collapsed]="collapsed()" />
+      <nav class="sidebar__nav u-scroll" aria-label="Navigation principale">
+        <app-sidebar-item icon="layout-dashboard" [label]="dashboard.label"
+                          [route]="dashboard.route" [collapsed]="collapsed()" />
 
-        @for (group of visibleGroups(); track group.key) {
-          <div class="sidebar__group">
+        @for (section of sections(); track section.key) {
+          <div class="sidebar__section">
             <button
               type="button"
-              class="sidebar__group-header"
-              [class.sidebar__group-header--collapsed]="collapsed()"
-              [style.--group-accent]="group.accent"
-              (click)="toggleGroup(group.key)"
-              [title]="collapsed() ? group.label : ''"
+              class="sidebar__section-header"
+              [class.sidebar__section-header--collapsed]="collapsed()"
+              [style.--group-accent]="section.accent"
+              [attr.aria-expanded]="isOpen(section.key)"
+              (click)="toggleNode(section.key)"
+              [title]="collapsed() ? section.label : ''"
             >
-              <app-icon [name]="group.icon" [size]="19" [style.color]="group.accent" />
+              <app-icon [name]="section.icon" [size]="19" [style.color]="section.accent" />
               @if (!collapsed()) {
-                <span class="t-body sidebar__group-label">{{ group.label }}</span>
-                <app-icon name="chevron-down" [size]="14"
-                          class="sidebar__chevron"
-                          [class.sidebar__chevron--open]="isOpen(group.key)" />
+                <span class="t-body sidebar__section-label">{{ section.label }}</span>
+                <app-icon name="chevron-down" [size]="14" class="sidebar__chevron"
+                          [class.sidebar__chevron--open]="isOpen(section.key)" />
               }
             </button>
-            @if (!collapsed() && isOpen(group.key)) {
-              <div class="sidebar__children" [style.border-left-color]="group.accent">
-                @for (child of group.children; track child.route) {
-                  <a [routerLink]="child.route" routerLinkActive="sidebar__child--active" class="sidebar__child t-caption">
-                    {{ child.label }}
-                  </a>
+
+            @if (!collapsed() && isOpen(section.key)) {
+              <div class="sidebar__children" [style.border-left-color]="section.accent">
+                @for (group of section.groups ?? []; track group.key) {
+                  <button
+                    type="button"
+                    class="sidebar__group-header"
+                    [attr.aria-expanded]="isOpen(group.key)"
+                    (click)="toggleNode(group.key)"
+                  >
+                    <app-icon [name]="group.icon" [size]="15" />
+                    <span class="t-caption sidebar__group-label">{{ group.label }}</span>
+                    <app-icon name="chevron-down" [size]="12" class="sidebar__chevron"
+                              [class.sidebar__chevron--open]="isOpen(group.key)" />
+                  </button>
+                  @if (isOpen(group.key)) {
+                    <div class="sidebar__grandchildren">
+                      @for (link of group.links; track link.route) {
+                        <a [routerLink]="link.route" routerLinkActive="sidebar__child--active"
+                           class="sidebar__child t-caption">{{ link.label }}</a>
+                      }
+                    </div>
+                  }
+                }
+
+                @for (link of section.links ?? []; track link.route) {
+                  <a [routerLink]="link.route" routerLinkActive="sidebar__child--active"
+                     class="sidebar__child t-caption">{{ link.label }}</a>
                 }
               </div>
             }
           </div>
         }
 
-        <app-sidebar-item icon="user" label="Profil"
-                           route="/app/profile" [collapsed]="collapsed()" />
+        <app-sidebar-item icon="user" [label]="profile.label"
+                          [route]="profile.route" [collapsed]="collapsed()" />
       </nav>
     </aside>
   `,
@@ -134,26 +99,60 @@ const NAV_GROUPS: NavGroup[] = [
 })
 export class Sidebar {
   private readonly store = inject(Store);
+  private readonly router = inject(Router);
+
   collapsed = input<boolean>(false);
   toggle = output<void>();
 
+  readonly dashboard = NAV_DASHBOARD;
+  readonly profile = NAV_PROFILE;
+
   private readonly permissions = toSignal(this.store.select(selectPermissions), { initialValue: [] as string[] });
-  private readonly openGroups = signal<Set<string>>(new Set(['operations']));
 
-  visibleGroups = computed(() => {
-    const perms = this.permissions();
-    return NAV_GROUPS.filter((g) => g.anyOf.length === 0 || g.anyOf.some((p) => perms.includes(p)));
-  });
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+      startWith(this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
 
-  isOpen(key: string): boolean {
-    return this.openGroups().has(key);
+  readonly sections = computed<NavSection[]>(() => visibleSections(this.permissions()));
+
+  private readonly openNodes = signal<ReadonlySet<string>>(new Set(['operations', 'operations.stocks']));
+
+  constructor() {
+    // Reveal whatever branch the current URL belongs to, without ever closing
+    // a branch the person opened by hand.
+    effect(() => {
+      const keys = this.branchFor(this.url());
+      if (keys.length) {
+        this.openNodes.update((open) => new Set([...open, ...keys]));
+      }
+    });
   }
 
-  toggleGroup(key: string): void {
-    this.openGroups.update((set) => {
-      const next = new Set(set);
-      next.has(key) ? next.delete(key) : next.add(key);
+  isOpen(key: string): boolean {
+    return this.openNodes().has(key);
+  }
+
+  toggleNode(key: string): void {
+    this.openNodes.update((open) => {
+      const next = new Set(open);
+      if (!next.delete(key)) next.add(key);
       return next;
     });
+  }
+
+  /** Section (and group) keys that contain `url`. */
+  private branchFor(url: string): string[] {
+    for (const section of this.sections()) {
+      for (const group of section.groups ?? []) {
+        if (group.links.some((l) => url.startsWith(l.route))) return [section.key, group.key];
+      }
+      if ((section.links ?? []).some((l) => url.startsWith(l.route))) return [section.key];
+    }
+    return [];
   }
 }

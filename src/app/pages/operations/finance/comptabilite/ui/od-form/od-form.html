@@ -1,0 +1,44 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="row-2">
+    <app-form-field label="Description" [required]="true"
+      [error]="submitted() && form.controls.description.invalid ? 'Requis.' : ''">
+      <app-text-input formControlName="description" />
+    </app-form-field>
+    <app-form-field label="Date d’écriture" [required]="true"
+      [error]="submitted() && form.controls.entryDate.invalid ? 'Requis.' : ''">
+      <app-date-input formControlName="entryDate" />
+    </app-form-field>
+  </div>
+
+  <app-form-field label="Période" [required]="true"
+    hint="Seules les périodes ouvertes acceptent une écriture."
+    [error]="submitted() && form.controls.periodId.invalid ? 'Choisissez une période ouverte.' : ''">
+    <app-select [options]="periodOptions" formControlName="periodId" placeholder="Choisir..." />
+  </app-form-field>
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="od-line">
+        <app-select [options]="accountOptions" formControlName="accountCode" placeholder="Compte" />
+        <app-text-input formControlName="label" placeholder="Libellé" />
+        <app-text-input type="number" formControlName="debit" placeholder="Débit" />
+        <app-text-input type="number" formControlName="credit" placeholder="Crédit" />
+        <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  <div class="od-totals" [class.od-totals--unbalanced]="!balanced()">
+    <span class="t-caption">Total débit : <strong>{{ money(totalDebit()) }}</strong></span>
+    <span class="t-caption">Total crédit : <strong>{{ money(totalCredit()) }}</strong></span>
+    <span class="t-caption">{{ balanced() ? 'Écriture équilibrée' : 'Écriture déséquilibrée' }}</span>
+  </div>
+
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()" [disabled]="!balanced()">Enregistrer l’écriture</app-button>
+  </div>
+</form>

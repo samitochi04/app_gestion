@@ -1,0 +1,65 @@
+<div class="cmd-status-row">
+  <app-badge [tone]="statusTone">{{ statusLabel }}</app-badge>
+  <span class="t-caption">
+    {{ invoice.customerName }} · Total TTC {{ money(invoice.totalAmountTTC) }} ·
+    Restant dû {{ money(invoice.remainingAmount) }}
+  </span>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="row-2">
+    <app-form-field label="Échéance">
+      <app-date-input formControlName="dueDate" />
+    </app-form-field>
+    <app-form-field label="Notes">
+      <app-text-input formControlName="notes" />
+    </app-form-field>
+  </div>
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  @if (isDraft()) {
+    <div formArrayName="lines" class="mv-lines">
+      @for (line of lines.controls; track $index; let i = $index) {
+        <div [formGroupName]="i" class="mv-line">
+          <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+          <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+          <app-text-input type="number" formControlName="unitPrice" placeholder="Prix" />
+          <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+            <app-icon name="x" [size]="16" />
+          </button>
+        </div>
+      }
+    </div>
+    <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+  } @else {
+    <ul class="fx-readonly-lines">
+      @for (line of invoice.lines; track line.id) {
+        <li class="t-caption">
+          {{ line.productName || ('Produit ' + line.productId) }} — {{ line.quantity }} ×
+          {{ money(line.unitPrice) }} = {{ money(line.amountTTC ?? line.amountHT) }}
+        </li>
+      }
+    </ul>
+    <p class="t-caption fx-locked">
+      Une facture validée ne se modifie plus. Corrigez-la par un avoir.
+    </p>
+  }
+
+  <div class="form-actions">
+    @if (isDraft()) {
+      <app-button variant="danger" type="button" (pressed)="cancelInvoice()">Annuler la facture</app-button>
+      <app-button variant="secondary" type="button" (pressed)="validate()">Valider</app-button>
+    }
+    @if (canSend()) {
+      <app-button variant="secondary" type="button" (pressed)="send()">Envoyer</app-button>
+    }
+    @if (canSettle()) {
+      <app-button variant="secondary" type="button" (pressed)="recordPayment()">Encaisser</app-button>
+      <app-button variant="secondary" type="button" (pressed)="openSchedule()">Échéancier</app-button>
+    }
+    <app-button variant="secondary" type="button" (pressed)="downloadPdf()">PDF</app-button>
+    @if (isDraft()) {
+      <app-button type="submit">Enregistrer</app-button>
+    }
+  </div>
+</form>

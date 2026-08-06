@@ -46,28 +46,67 @@ export function deriveExpiryStatus(expiryDate?: string | null): StockStatus | nu
 }
 
 /* ------------------------------------------------------------------ */
-/* Document signals — shared across quotes, orders, invoices, avoirs.  */
-/* Keys mirror likely backend status enums; align labels once confirmed.*/
+/* Document signals — shared across quotes, orders, invoices, avoirs,   */
+/* échéanciers, écritures, périodes et inbox comptable.                 */
+/* Keys mirror the backend status enums exactly.                        */
 /* ------------------------------------------------------------------ */
 export type DocumentStatus =
-  | 'DRAFT' | 'SENT' | 'VALIDATED' | 'CONFIRMED' | 'PREPARING'
-  | 'SHIPPED' | 'DELIVERED' | 'PAID' | 'PARTIALLY_PAID'
-  | 'OVERDUE' | 'CANCELLED' | 'CONVERTED' | 'EXPIRED';
+  // commun
+  | 'DRAFT' | 'SENT' | 'VALIDATED' | 'CANCELLED' | 'CONVERTED' | 'EXPIRED'
+  // devis
+  | 'ACCEPTED' | 'REJECTED'
+  // commandes
+  | 'CONFIRMED' | 'PREPARING' | 'SHIPPED' | 'DELIVERED'
+  // factures
+  | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'REVERSED' | 'CREDITED'
+  // avoirs · pro formas
+  | 'APPLIED' | 'EXECUTED'
+  // échéanciers et échéances
+  | 'ON_TRACK' | 'COMPLETED' | 'PENDING' | 'PARTIAL' | 'LATE'
+  // écritures et périodes comptables
+  | 'POSTED' | 'OPEN' | 'CLOSED'
+  // inbox comptable · réservations
+  | 'FAILED' | 'ACTIVE' | 'RELEASED' | 'CONSUMED';
 
 export const DOCUMENT_STATUS: Record<DocumentStatus, StatusMeta> = {
-  DRAFT:          { label: 'Brouillon',       tone: 'neutral' },
-  SENT:           { label: 'Envoyé',          tone: 'info' },
-  VALIDATED:      { label: 'Validé',          tone: 'info' },
-  CONFIRMED:      { label: 'Confirmé',        tone: 'info' },
-  PREPARING:      { label: 'En préparation',  tone: 'warning' },
-  SHIPPED:        { label: 'Expédié',         tone: 'info' },
-  DELIVERED:      { label: 'Livré',           tone: 'success' },
-  PAID:           { label: 'Payé',            tone: 'success' },
+  DRAFT:          { label: 'Brouillon',          tone: 'neutral' },
+  SENT:           { label: 'Envoyé',             tone: 'info' },
+  VALIDATED:      { label: 'Validé',             tone: 'info' },
+  CANCELLED:      { label: 'Annulé',             tone: 'danger' },
+  CONVERTED:      { label: 'Converti',           tone: 'neutral' },
+  EXPIRED:        { label: 'Expiré',             tone: 'danger' },
+
+  ACCEPTED:       { label: 'Accepté',            tone: 'success' },
+  REJECTED:       { label: 'Refusé',             tone: 'danger' },
+
+  CONFIRMED:      { label: 'Confirmé',           tone: 'info' },
+  PREPARING:      { label: 'En préparation',     tone: 'warning' },
+  SHIPPED:        { label: 'Expédié',            tone: 'info' },
+  DELIVERED:      { label: 'Livré',              tone: 'success' },
+
+  PAID:           { label: 'Payé',               tone: 'success' },
   PARTIALLY_PAID: { label: 'Partiellement payé', tone: 'warning' },
-  OVERDUE:        { label: 'En retard',       tone: 'danger' },
-  CANCELLED:      { label: 'Annulé',          tone: 'danger' },
-  CONVERTED:      { label: 'Converti',        tone: 'neutral' },
-  EXPIRED:        { label: 'Expiré',          tone: 'danger' },
+  OVERDUE:        { label: 'En retard',          tone: 'danger' },
+  REVERSED:       { label: 'Extourné',           tone: 'danger' },
+  CREDITED:       { label: 'Soldé par avoir',    tone: 'neutral' },
+
+  APPLIED:        { label: 'Appliqué',           tone: 'success' },
+  EXECUTED:       { label: 'Exécuté',            tone: 'success' },
+
+  ON_TRACK:       { label: 'À jour',             tone: 'success' },
+  COMPLETED:      { label: 'Soldé',              tone: 'success' },
+  PENDING:        { label: 'En attente',         tone: 'neutral' },
+  PARTIAL:        { label: 'Partiel',            tone: 'warning' },
+  LATE:           { label: 'En retard',          tone: 'danger' },
+
+  POSTED:         { label: 'Comptabilisé',       tone: 'success' },
+  OPEN:           { label: 'Ouverte',            tone: 'success' },
+  CLOSED:         { label: 'Clôturée',           tone: 'neutral' },
+
+  FAILED:         { label: 'En échec',           tone: 'danger' },
+  ACTIVE:         { label: 'Active',             tone: 'info' },
+  RELEASED:       { label: 'Libérée',            tone: 'neutral' },
+  CONSUMED:       { label: 'Consommée',          tone: 'success' },
 };
 
 /** Safe lookup — unknown backend values fall back to a neutral pill. */

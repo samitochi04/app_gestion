@@ -2,33 +2,47 @@
 
 <form [formGroup]="form" (ngSubmit)="submit()">
   <div class="row-2">
-    <app-form-field [label]="type() === 'TRANSFER' ? 'Entrepôt source' : 'Entrepôt'" [required]="true">
+    <app-form-field [label]="isTransfer() ? 'Entrepôt source' : 'Entrepôt'" [required]="true"
+      [error]="submitted() && form.controls.warehouseId.invalid ? 'Entrepôt requis.' : ''">
       <app-select [options]="warehouseOptions()" formControlName="warehouseId" placeholder="Choisir..." />
     </app-form-field>
-    @if (type() === 'TRANSFER') {
-      <app-form-field label="Entrepôt destination" [required]="true">
+    @if (isTransfer()) {
+      <app-form-field label="Entrepôt destination" [required]="true"
+        [error]="submitted() && !form.controls.destWarehouseId.value ? 'Entrepôt de destination requis.' : ''">
         <app-select [options]="warehouseOptions()" formControlName="destWarehouseId" placeholder="Choisir..." />
       </app-form-field>
     } @else {
-      <app-form-field label="Référence">
+      <app-form-field label="Référence" [required]="isAdjust()"
+        [hint]="isAdjust() ? 'Référence de la feuille d’inventaire.' : ''"
+        [error]="submitted() && isAdjust() && !form.controls.reference.value ? 'Référence requise pour un ajustement.' : ''">
         <app-text-input formControlName="reference" />
       </app-form-field>
     }
   </div>
 
-  @if (type() === 'TRANSFER') {
-    <app-form-field label="Référence">
-      <app-text-input formControlName="reference" />
+  <div class="row-2">
+    @if (isTransfer()) {
+      <app-form-field label="Référence">
+        <app-text-input formControlName="reference" />
+      </app-form-field>
+    }
+    <app-form-field label="Date d’opération" hint="Détermine la période comptable impactée.">
+      <app-date-input formControlName="operationDate" />
     </app-form-field>
-  }
+  </div>
 
   <p class="t-micro mv-lines-title">Lignes</p>
   <div formArrayName="lines" class="mv-lines">
     @for (line of lines.controls; track $index; let i = $index) {
-      <div [formGroupName]="i" class="mv-line">
+      <div [formGroupName]="i" [class]="isReceive() ? 'mv-line mv-line--receive' : 'mv-line'">
         <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
-        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="quantity"
+                        [placeholder]="isAdjust() ? 'Qté comptée' : 'Qté'" />
         <app-text-input type="number" formControlName="unitCost" placeholder="Coût unitaire" />
+        @if (isReceive()) {
+          <app-text-input type="number" formControlName="damagedQuantity" placeholder="Avariés" />
+          <app-text-input type="number" formControlName="missingQuantity" placeholder="Manquants" />
+        }
         <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
           <app-icon name="x" [size]="16" />
         </button>
@@ -36,6 +50,18 @@
     }
   </div>
   <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  @if (isAdjust()) {
+    <p class="t-caption mv-hint">
+      Un ajustement déclare la quantité <strong>comptée</strong>, pas un écart : le stock est aligné sur cette valeur.
+    </p>
+  }
+  @if (isReceive()) {
+    <p class="t-caption mv-hint">
+      Les quantités avariées partent dans l’entrepôt d’avariés, en mouvement séparé.
+      Les manquants ne sont enregistrés nulle part.
+    </p>
+  }
 
   <app-form-field label="Notes">
     <app-text-input formControlName="notes" />
