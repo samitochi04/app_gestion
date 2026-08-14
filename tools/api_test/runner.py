@@ -237,6 +237,65 @@ def print_console(checks: list[Check], summary: Summary, color: bool) -> None:
             print(f"   • [{c.module}] {c.endpoint} — {c.detail}")
 
 
+def build_whatsapp(checks: list[Check], summary: Summary, meta: dict[str, Any]) -> str:
+    """Plain-text, paste-ready summary of *what is broken*, for WhatsApp.
+
+    No colours, no timings, no stack traces — one line per failing endpoint,
+    grouped by module, so it can be dropped straight into a chat to the backend
+    dev. A connection-level failure (status 0) is flagged first because it means
+    the run never really reached the server.
+    """
+    failures = [c for c in checks if c.outcome == FAIL]
+    when = datetime.now().strftime("%d/%m/%Y à %H:%M")
+    backend = meta.get("backend", "")
+
+    lines: list[str] = []
+    lines.append("*Test API backend KIT*")
+    lines.append(f"{when} — {backend}")
+    lines.append(
+        f"{summary.passed} OK · {summary.failed} KO · {summary.skipped} non testés "
+        f"(sur {summary.total} appels)"
+    )
+    lines.append("")
+
+    if not failures:
+        lines.append("✅ Aucun problème détecté : tous les endpoints testés répondent correctement.")
+        lines.append("")
+        return "\n".join(lines)
+
+    # A total connection failure is the headline if it happened.
+    unreachable = [c for c in failures if c.status == 0]
+    if unreachable and len(unreachable) == len(failures):
+        lines.append("⚠️ Le backend semble injoignable (aucune réponse). Vérifier qu\'il tourne et l\'URL.")
+        lines.append("")
+
+    lines.append(f"❌ *Ce qui ne marche pas ({len(failures)})*")
+    lines.append("")
+
+    current = None
+    for c in failures:
+        if c.module != current:
+            current = c.module
+            lines.append(f"*{current}*")
+        reason = c.detail or (f"HTTP {c.status}" if c.status else "aucune réponse")
+        lines.append(f"• {c.endpoint}")
+        lines.append(f"   → {reason}")
+    lines.append("")
+    lines.append(
+        "_Les « non testés » sont des étapes ignorées volontairement "
+        "(envois d\'e-mails, imports en masse) ou bloquées par un échec en amont._"
+    )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def write_whatsapp(path: str, checks: list[Check], summary: Summary, meta: dict[str, Any]) -> str:
+    text = build_whatsapp(checks, summary, meta)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return text
+
+
 def write_json(path: str, checks: list[Check], summary: Summary, meta: dict[str, Any]) -> None:
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),

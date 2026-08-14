@@ -66,7 +66,7 @@ describe('sidebar navigation tree', () => {
 describe('permission filtering', () => {
   it('shows the whole tree to a user holding every permission', () => {
     const sections = visibleSections(Object.values(Permission) as string[]);
-    expect(sections.map((s) => s.key)).toEqual(['operations', 'reporting', 'administration']);
+    expect(sections.map((s) => s.key)).toEqual(['operations', 'achat', 'messagerie', 'reporting', 'administration']);
   });
 
   it('hides every group and link the user cannot reach', () => {

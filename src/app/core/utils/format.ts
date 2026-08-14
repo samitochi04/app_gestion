@@ -28,3 +28,17 @@ export function formatPercent(value: number | null | undefined): string {
   const sign = v > 0 ? '+' : '';
   return `${sign}${v.toFixed(1)}%`;
 }
+
+/** Formats an ISO date/datetime as a French short date, null-safe. */
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('fr-FR');
+}
+
+/** Formats an ISO datetime as a French date + time, null-safe. */
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return '—';
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleString('fr-FR');
+}

@@ -1,0 +1,17 @@
+<app-page-header title="Factures fournisseur" description="Factures d’achat (FA-…) et leurs règlements.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouvelle facture</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="invoices()" [loading]="loading()"
+      [searchTerm]="searchTerm()" [actions]="actions"
+      emptyTitle="Aucune facture fournisseur"
+      emptyMessage="Créez-en une directement, ou générez-la depuis une commande d’achat confirmée."
+      [canView]="true" [canEdit]="false" [canDelete]="false"
+      (view)="view($event)"
+    />
+  </div>
+</app-card>

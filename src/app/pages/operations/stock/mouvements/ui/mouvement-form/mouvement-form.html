@@ -32,6 +32,11 @@
   </div>
 
   <p class="t-micro mv-lines-title">Lignes</p>
+  <p class="t-caption mv-hint">
+    Chaque ligne : <strong>Produit</strong>, puis <strong>{{ isAdjust() ? 'Quantité comptée' : 'Quantité' }}</strong>
+    et <strong>Coût unitaire</strong>@if (isReceive()) {, puis <strong>Avariés</strong> et <strong>Manquants</strong>}.
+    @if (isTransfer()) { Pour un transfert, seuls la quantité et le coût unitaire sont utilisés. }
+  </p>
   <div formArrayName="lines" class="mv-lines">
     @for (line of lines.controls; track $index; let i = $index) {
       <div [formGroupName]="i" [class]="isReceive() ? 'mv-line mv-line--receive' : 'mv-line'">

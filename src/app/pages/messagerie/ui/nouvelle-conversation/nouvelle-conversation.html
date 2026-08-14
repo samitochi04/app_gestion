@@ -1,0 +1,36 @@
+<app-segmented-tabs [options]="tabs" [active]="mode()" (selected)="setMode($event)" />
+
+<div class="nc">
+  @if (mode() !== 'direct') {
+    <app-form-field label="Sujet" [required]="true">
+      <app-text-input [ngModel]="subject()" (ngModelChange)="subject.set($event)" />
+    </app-form-field>
+  }
+
+  @if (mode() !== 'support') {
+    <app-form-field [label]="mode() === 'direct' ? 'Destinataire' : 'Participants'">
+      <app-text-input placeholder="Rechercher un collègue…" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+    </app-form-field>
+
+    <div class="nc__people u-scroll">
+      @for (c of filtered(); track c.id) {
+        <button type="button" class="nc__person" [class.nc__person--on]="isSelected(c.id)" (click)="toggle(c.id)">
+          <span class="nc__avatar">{{ (c.name || c.email).charAt(0).toUpperCase() }}</span>
+          <span class="nc__meta">
+            <span class="t-body-strong">{{ c.name || c.email }}</span>
+            <span class="t-caption">{{ c.email }}</span>
+          </span>
+          @if (isSelected(c.id)) { <span class="nc__check">✓</span> }
+        </button>
+      } @empty {
+        <p class="t-caption nc__empty">Aucun correspondant.</p>
+      }
+    </div>
+  } @else {
+    <p class="t-caption">Un fil de support relie l’auteur aux personnes disposant de la permission de support.</p>
+  }
+
+  <div class="form-actions">
+    <app-button (pressed)="create()" [loading]="saving()">Créer</app-button>
+  </div>
+</div>

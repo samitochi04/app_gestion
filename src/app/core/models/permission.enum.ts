@@ -115,7 +115,7 @@ export const Permission = {
 export type PermissionKey = (typeof Permission)[keyof typeof Permission];
 
 /** Top-level module identifiers — the boxes on the Menu Principal. */
-export type ModuleKey = 'dashboard' | 'operations' | 'reporting' | 'administration' | 'profile';
+export type ModuleKey = 'dashboard' | 'operations' | 'achat' | 'reporting' | 'administration' | 'messagerie' | 'profile';
 
 export interface ModuleDescriptor {
   key: ModuleKey;
@@ -157,6 +157,14 @@ export const MODULES: ModuleDescriptor[] = [
     ],
   },
   {
+    key: 'achat', label: 'Achat', description: 'Fournisseurs, commandes et factures',
+    icon: 'truck', route: '/app/achat/fournisseurs',
+    accentVar: '--module-operations', accentTintVar: '--module-operations-tint',
+    anyOf: [
+      Permission.SUPPLIER_READ, Permission.PURCHASE_ORDER_READ, Permission.SUPPLIER_INVOICE_READ,
+    ],
+  },
+  {
     key: 'reporting', label: 'Reporting', description: 'Rapports et exports',
     icon: 'bar-chart', route: '/app/reporting/ventes',
     accentVar: '--module-reporting', accentTintVar: '--module-reporting-tint',
@@ -165,6 +173,12 @@ export const MODULES: ModuleDescriptor[] = [
       Permission.ACCOUNTING_REPORT_READ, Permission.PRODUCT_READ, Permission.MOVEMENT_READ,
       Permission.INVOICE_READ, Permission.ORDER_READ, Permission.QUOTE_READ,
     ],
+  },
+  {
+    key: 'messagerie', label: 'Messagerie', description: 'Échanges internes et support',
+    icon: 'message-circle', route: '/app/messagerie',
+    accentVar: '--module-reporting', accentTintVar: '--module-reporting-tint',
+    anyOf: [Permission.MESSAGE_READ],
   },
   {
     key: 'administration', label: 'Administration', description: 'Utilisateurs, rôles et audit',

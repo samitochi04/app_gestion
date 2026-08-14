@@ -1,0 +1,56 @@
+@if (isEdit) {
+  <div class="row-2" style="align-items:center; margin-bottom: var(--space-3);">
+    <div><span class="t-caption">Référence</span><p class="t-body-strong">{{ order?.reference }}</p></div>
+    <app-badge [tone]="statusTone">{{ statusLabel }}</app-badge>
+  </div>
+}
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <div class="row-2">
+    <app-form-field label="Fournisseur" [required]="true"
+      [error]="submitted() && form.controls.supplierId.invalid ? 'Fournisseur requis.' : ''">
+      <app-select [options]="supplierOptions()" formControlName="supplierId" placeholder="Choisir..." />
+    </app-form-field>
+    <app-form-field label="Date attendue">
+      <app-date-input formControlName="expectedDate" />
+    </app-form-field>
+  </div>
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  <p class="t-caption mv-hint">
+    Chaque ligne : <strong>Produit</strong>, <strong>Quantité</strong>, <strong>Prix unitaire</strong>,
+    <strong>TVA %</strong> et <strong>Nature</strong> (marchandise ou prestation — décide du compte comptable).
+  </p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="mv-line mv-line--receive">
+        <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="unitPrice" placeholder="Prix unitaire" />
+        <app-text-input type="number" formControlName="vatRate" placeholder="TVA %" />
+        <app-select [options]="natures" formControlName="nature" />
+        @if (isDraft) {
+          <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+            <app-icon name="x" [size]="16" />
+          </button>
+        }
+      </div>
+    }
+  </div>
+  @if (isDraft) {
+    <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+  }
+
+  <app-form-field label="Notes">
+    <app-text-input formControlName="notes" />
+  </app-form-field>
+
+  <div class="form-actions">
+    @if (!isEdit) {
+      <app-button type="submit" [loading]="saving()">Créer</app-button>
+    }
+    @if (canConfirm()) { <app-button type="button" (pressed)="confirm()" [loading]="saving()">Confirmer</app-button> }
+    @if (canInvoice()) { <app-button type="button" variant="secondary" (pressed)="invoice()" [loading]="saving()">Créer la facture</app-button> }
+    @if (canCancel()) { <app-button type="button" variant="danger" (pressed)="cancel()" [loading]="saving()">Annuler la commande</app-button> }
+  </div>
+</form>

@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Actions, ofType } from '@ngrx/effects';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { PageHeader } from '../../../../../../shared/ui/page-header/page-header';
 import { Card } from '../../../../../../shared/ui/card/card';
 import { Button } from '../../../../../../shared/ui/button/button';
@@ -20,6 +21,7 @@ import {
 } from '../../data/store/product.selectors';
 import { Product } from '../../data/product.model';
 import { ProduitForm } from '../produit-form/produit-form';
+import { ProduitDetail } from '../produit-detail/produit-detail';
 import { CategoryService } from '../../../categories/data/category.service';
 import { formatMoney } from '../../../../../../core/utils/format';
 
@@ -31,6 +33,8 @@ import { formatMoney } from '../../../../../../core/utils/format';
 })
 export class ProduitsList implements OnInit {
   private readonly store = inject(Store);
+  private readonly actions = inject(Actions);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(DialogService);
   private readonly categoryService = inject(CategoryService);
   private readonly notifications = inject(NotificationsService);
@@ -41,6 +45,16 @@ export class ProduitsList implements OnInit {
   size = toSignal(this.store.select(selectProductsSize), { initialValue: 20 });
   totalElements = toSignal(this.store.select(selectProductsTotalElements), { initialValue: 0 });
   totalPages = toSignal(this.store.select(selectProductsTotalPages), { initialValue: 0 });
+
+  /** Id of the row to pulse right after a create, so the eye lands on it. */
+  flashId = signal<number | null>(null);
+
+  constructor() {
+    // When a create finishes, the reducer appends the product to the current
+    // page. Flash that row and scroll it into view so the user is taken to it.
+    this.actions.pipe(ofType(ProductActions.createSuccess), takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ product }) => this.flashRow(product.id));
+  }
 
   searchTerm = signal('');
   activeFilters = signal<Record<string, string | number | null>>({});
@@ -102,8 +116,21 @@ export class ProduitsList implements OnInit {
     this.dialog.open(ProduitForm, { title: 'Nouveau produit', size: 'lg' });
   }
 
+  view(product: Product): void {
+    this.dialog.open(ProduitDetail, { title: `Produit — ${product.name}`, size: 'lg', data: { product } });
+  }
+
   edit(product: Product): void {
     this.dialog.open(ProduitForm, { title: 'Modifier le produit', size: 'lg', data: { product } });
+  }
+
+  /** Pulse the freshly created row and bring it into view. */
+  private flashRow(id: number): void {
+    this.flashId.set(id);
+    setTimeout(() => {
+      document.querySelector(`[data-row-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+    setTimeout(() => this.flashId.set(null), 2200);
   }
 
   remove(product: Product): void {

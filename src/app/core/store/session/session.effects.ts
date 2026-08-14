@@ -45,7 +45,12 @@ export const registerEffect = createEffect(
   { functional: true },
 );
 
-/** On login/register success: store tokens + go to the module menu. */
+/**
+ * On login/register success: store tokens + navigate. If the user was bounced
+ * to /login from a protected deep link (authGuard preserves it as a `redirect`
+ * query param), return them there so an expired-session re-login lands back on
+ * the page they wanted — not the Menu Principal. Otherwise go to the menu.
+ */
 export const authSuccessEffect = createEffect(
   (
     actions$ = inject(Actions),
@@ -56,7 +61,12 @@ export const authSuccessEffect = createEffect(
       ofType(SessionActions.loginSuccess, SessionActions.registerSuccess),
       tap(({ response }) => {
         tokens.save(response.accessToken, response.refreshToken);
-        router.navigate(['/menu']);
+        const redirect = router.parseUrl(router.url).queryParams['redirect'];
+        if (redirect && redirect.startsWith('/app')) {
+          router.navigateByUrl(redirect);
+        } else {
+          router.navigate(['/menu']);
+        }
       }),
     ),
   { functional: true, dispatch: false },

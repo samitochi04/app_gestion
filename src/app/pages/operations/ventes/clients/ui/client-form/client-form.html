@@ -4,19 +4,23 @@
       [error]="submitted() && form.controls.name.invalid ? 'Le nom est requis.' : ''">
       <app-text-input formControlName="name" />
     </app-form-field>
+    <app-form-field label="Type" [required]="true"
+      [error]="submitted() && form.controls.type.invalid ? 'Le type est requis.' : ''">
+      <app-select [options]="types" formControlName="type" placeholder="Choisir..." />
+    </app-form-field>
+  </div>
+  <div class="row-2">
     <app-form-field label="E-mail"
       [error]="submitted() && form.controls.email.invalid ? 'E-mail invalide.' : ''">
       <app-text-input type="email" formControlName="email" />
     </app-form-field>
-  </div>
-  <div class="row-2">
     <app-form-field label="Téléphone">
       <app-text-input formControlName="phone" />
     </app-form-field>
-    <app-form-field label="Identifiant fiscal">
-      <app-text-input formControlName="taxId" />
-    </app-form-field>
   </div>
+  <app-form-field label="Identifiant fiscal">
+    <app-text-input formControlName="taxId" />
+  </app-form-field>
   <app-form-field label="Adresse">
     <app-text-input formControlName="street" />
   </app-form-field>

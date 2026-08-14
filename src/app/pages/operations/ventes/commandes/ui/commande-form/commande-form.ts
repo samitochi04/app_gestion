@@ -38,6 +38,8 @@ export class CommandeForm {
 
   productOptions = signal<SelectOption[]>([]);
   customerOptions = signal<SelectOption[]>([]);
+  /** productId → display name, so each line can carry the required productName. */
+  private productNames = new Map<number, string>();
 
   form = this.fb.group({
     customerId: [this.order?.customerId ?? null, Validators.required],
@@ -57,6 +59,7 @@ export class CommandeForm {
   constructor() {
     this.productService.list({ page: 0, size: 200 }).subscribe((res) => {
       this.productOptions.set(res.content.map((p) => ({ value: p.id, label: `${p.sku} — ${p.name}` })));
+      this.productNames = new Map(res.content.map((p) => [p.id, p.name]));
     });
     this.customerService.list({ page: 0, size: 200 }).subscribe((res) => {
       this.customerOptions.set(res.content.map((c) => ({ value: c.id, label: c.name })));
@@ -87,7 +90,10 @@ export class CommandeForm {
     const payload = {
       customerId: v.customerId!,
       lines: v.lines.map((l) => ({
-        productId: l.productId!, quantity: l.quantity!, unitSalePrice: l.unitSalePrice!,
+        productId: l.productId!,
+        // `productName` is required by OrderLineDto — omitting it caused the 400.
+        productName: this.productNames.get(l.productId!) ?? `Produit ${l.productId}`,
+        quantity: l.quantity!, unitSalePrice: l.unitSalePrice!,
         discount: l.discount ?? 0, vatRate: l.vatRate ?? 20,
       })),
       street: v.street ?? undefined, city: v.city ?? undefined,

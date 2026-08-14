@@ -1,0 +1,20 @@
+.nc { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+.nc__people {
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 320px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); padding: var(--space-1);
+}
+.nc__person {
+  display: flex; align-items: center; gap: var(--space-3);
+  background: none; border: none; cursor: pointer; text-align: left;
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); width: 100%;
+}
+.nc__person:hover { background: var(--color-surface-alt); }
+.nc__person--on { background: var(--color-accent-tint, var(--color-surface-alt)); }
+.nc__avatar {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-primary); color: #fff; font-weight: var(--fw-semibold); flex: none;
+}
+.nc__meta { display: flex; flex-direction: column; min-width: 0; }
+.nc__meta .t-caption { color: var(--color-text-secondary); }
+.nc__check { margin-left: auto; color: var(--color-primary); font-weight: var(--fw-bold); }
+.nc__empty { padding: var(--space-3); color: var(--color-text-secondary); }

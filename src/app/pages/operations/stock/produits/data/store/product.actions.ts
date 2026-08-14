@@ -9,7 +9,10 @@ export const ProductActions = createActionGroup({
     'Load Page Success': props<{ response: PageResponse<Product> }>(),
     'Load Page Failure': props<{ message: string }>(),
 
-    'Create': props<{ payload: CreateProductRequest }>(),
+    // `sale` carries the sale price / margin, which the backend's
+    // CreateProductCommand does NOT accept — the effect applies it with an
+    // immediate follow-up update so a newly created product keeps its price.
+    'Create': props<{ payload: CreateProductRequest; sale?: { unitSalePrice?: number; marginPercent?: number } }>(),
     'Create Success': props<{ product: Product }>(),
     'Create Failure': props<{ message: string }>(),
 

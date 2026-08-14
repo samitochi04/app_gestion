@@ -1,0 +1,34 @@
+*Test API backend KIT*
+14/08/2026 à 12:35 — http://51.75.248.25:8084
+160 OK · 10 KO · 45 non testés (sur 215 appels)
+
+❌ *Ce qui ne marche pas (10)*
+
+*Entrepôts (/api/warehouses)*
+• POST /api/warehouses/{id}/purchase-default
+   → 500 INTERNAL_ERROR — Erreur interne du serveur
+• POST /api/warehouses/{id}/damaged-default
+   → 500 INTERNAL_ERROR — Erreur interne du serveur
+*Devis (/api/quotes)*
+• POST /api/quotes/{id}/convert
+   → 400 VALIDATION_ERROR — Seul un devis accepté peut être converti en commande
+*Commandes (/api/orders)*
+• POST /api/orders/{id}/confirm
+   → 422 INSUFFICIENT_STOCK — Stock insuffisant pour : Produit APITEST-20260814-123412
+• POST /api/orders/{id}/prepare
+   → 400 VALIDATION_ERROR — Seule une commande confirmée peut passer en préparation
+• POST /api/orders/{id}/ship
+   → 400 VALIDATION_ERROR — La commande doit être confirmée ou en préparation pour être expédiée
+• POST /api/orders/{id}/deliver
+   → 400 VALIDATION_ERROR — Seule une commande expédiée peut être marquée livrée
+*Périodes comptables (/api/accounting/periods)*
+• POST /api/accounting/periods
+   → 400 VALIDATION_ERROR — Une période existe déjà pour 12/2028
+*Commandes d'achat (/api/purchase-orders)*
+• POST /api/purchase-orders
+   → 400 VALIDATION_ERROR — Fournisseur « Fournisseur APITEST-20260814-123412 » désactivé
+*Factures fournisseur (/api/supplier-invoices)*
+• POST /api/supplier-invoices
+   → 400 VALIDATION_ERROR — Fournisseur « Fournisseur APITEST-20260814-123412 » désactivé
+
+_Les « non testés » sont des étapes ignorées volontairement (envois d'e-mails, imports en masse) ou bloquées par un échec en amont._

@@ -89,6 +89,27 @@ export class Dashboard implements OnInit {
     return alerts.slice(0, 8).map((a) => ({ name: a.productName, value: a.currentQuantity ?? 0 }));
   });
 
+  /**
+   * What to chart on the Stock tab. Alerts first (the actionable view); when
+   * there are none, fall back to the most-moved products so the card is never
+   * an empty white box. `stockChartTitle` matches whichever source is used.
+   */
+  stockChartSeries = computed<BarDatum[]>(() => {
+    const alerts = this.stockTopSeries();
+    if (alerts.length) return alerts;
+    const issued = this.stock()?.topIssuedProducts ?? [];
+    if (issued.length) return issued.slice(0, 8).map((p) => ({ name: p.name, value: p.value ?? 0 }));
+    const received = this.stock()?.topReceivedProducts ?? [];
+    return received.slice(0, 8).map((p) => ({ name: p.name, value: p.value ?? 0 }));
+  });
+
+  stockChartTitle = computed(() => {
+    if (this.stockTopSeries().length) return 'Quantités en alerte';
+    if ((this.stock()?.topIssuedProducts ?? []).length) return 'Produits les plus sortis';
+    if ((this.stock()?.topReceivedProducts ?? []).length) return 'Produits les plus reçus';
+    return 'Activité de stock';
+  });
+
   isProfitable = computed(() => (this.financial()?.netResult ?? 0) >= 0);
 
   ngOnInit(): void {

@@ -15,6 +15,7 @@ import { FormField } from '../../../../../../shared/ui/form-field/form-field';
 import { DateInput } from '../../../../../../shared/ui/date-input/date-input';
 import { KpiCard } from '../../../../../../shared/ui/kpi-card/kpi-card';
 import { DialogService } from '../../../../../../core/services/dialog.service';
+import { DetailDialog, DetailDialogData } from '../../../../../../shared/ui/detail-dialog/detail-dialog';
 import { FilterDialog, FilterFieldConfig } from '../../../../../../shared/ui/filter-dialog/filter-dialog';
 import { NotificationsService } from '../../../../../../core/services/notifications.service';
 import { documentStatusMeta } from '../../../../../../core/models/status.model';
@@ -182,6 +183,52 @@ export class MouvementsList implements OnInit {
       size: 'lg',
       data: { productId: row.productId, productName: this.productName(row.productId) },
     });
+  }
+
+  /**
+   * Read-only movement sheet, opened from the eye icon on the Mouvements tab.
+   * Previously that tab had no working action (only the Stock tab's "Voir les
+   * lots"), and a transfer's line prices/values had nowhere to be inspected —
+   * this shows the header plus every line with its unit cost and line total.
+   */
+  viewMovement(m: StockMovement): void {
+    const lines = m.lines ?? [];
+    const header = [
+      { label: 'Référence', value: m.reference || '—' },
+      { label: 'Type', value: TYPE_LABELS[m.type] ?? m.type },
+      { label: 'Statut', value: documentStatusMeta(m.status).label },
+      { label: 'Entrepôt', value: this.warehouseName(m.warehouseId) },
+    ];
+    if (m.destWarehouseId != null) {
+      header.push({ label: 'Entrepôt destination', value: this.warehouseName(m.destWarehouseId) });
+    }
+    header.push({ label: 'Date', value: this.dateOf(m) });
+    header.push({ label: 'Valeur totale', value: formatMoney(m.totalValue) });
+
+    const data: DetailDialogData = {
+      sections: [
+        { title: 'Mouvement', fields: header },
+        {
+          title: 'Lignes',
+          table: {
+            columns: [
+              { header: 'Produit' },
+              { header: 'Quantité', align: 'right' },
+              { header: 'Coût unitaire', align: 'right' },
+              { header: 'Total ligne', align: 'right' },
+            ],
+            rows: lines.map((l) => [
+              { text: l.productName || this.productName(l.productId) },
+              { text: String(l.quantity ?? 0), align: 'right' as const },
+              { text: formatMoney(l.unitCost), align: 'right' as const },
+              { text: formatMoney(l.lineTotal ?? (l.unitCost ?? 0) * (l.quantity ?? 0)), align: 'right' as const },
+            ]),
+            empty: 'Aucune ligne sur ce mouvement.',
+          },
+        },
+      ],
+    };
+    this.dialog.open(DetailDialog, { title: `Mouvement ${m.reference || ''}`.trim(), size: 'lg', data });
   }
 
   private loadStock(): void {

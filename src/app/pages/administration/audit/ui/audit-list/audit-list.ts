@@ -29,7 +29,10 @@ export class AuditList implements OnInit {
     { key: 'module', header: 'Module' },
     { key: 'entityType', header: 'Entité' },
     { key: 'actionLabel', header: 'Action' },
-    { key: 'userEmail', header: 'Utilisateur' },
+    // The audit module records the actor's UUID (SecurityUtils.getCurrentUserId);
+    // it does not depend on IAM to resolve an email, so userEmail is often
+    // empty. Fall back to the userId so the column is never blank.
+    { key: 'userEmail', header: 'Utilisateur', cell: (r) => r.userEmail || r.userId || '—' },
   ];
 
   ngOnInit(): void { this.load(0); }

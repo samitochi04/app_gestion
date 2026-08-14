@@ -25,6 +25,11 @@
             <p class="t-h3 dashboard__chart-title">Évolution du chiffre d’affaires</p>
             <app-line-chart [data]="salesRevenueSeries()" [height]="280" />
           </app-card>
+        } @else {
+          <app-card class="dashboard__chart">
+            <app-empty-state icon="bar-chart" title="Pas encore d’historique mensuel"
+                              message="Le détail mensuel du chiffre d’affaires apparaîtra dès qu’une facture aura été validée sur la période." />
+          </app-card>
         }
       } @else {
         <app-empty-state icon="bar-chart" title="Aucune donnée de ventes" />
@@ -75,10 +80,15 @@
           <app-kpi-card label="Rotation moyenne" [value]="(st.averageStockRotation ?? 0).toFixed(1)" />
         </div>
 
-        @if (stockTopSeries().length) {
+        @if (stockChartSeries().length) {
           <app-card class="dashboard__chart">
-            <p class="t-h3 dashboard__chart-title">Quantités en alerte</p>
-            <app-bar-chart [data]="stockTopSeries()" [height]="260" />
+            <p class="t-h3 dashboard__chart-title">{{ stockChartTitle() }}</p>
+            <app-bar-chart [data]="stockChartSeries()" [height]="260" />
+          </app-card>
+        } @else {
+          <app-card class="dashboard__chart">
+            <app-empty-state icon="boxes" title="Aucune donnée à représenter"
+                              message="Les graphiques de stock s’afficheront dès qu’il y aura des mouvements ou des alertes." />
           </app-card>
         }
 

@@ -64,7 +64,8 @@ export interface DataTableAction<T> {
           </thead>
           <tbody>
             @for (row of filteredRows(); track trackByFn(row)) {
-              <tr class="table__row" (click)="rowClick.emit(row)">
+              <tr class="table__row" [class.table__row--flash]="isHighlighted(row)"
+                  [attr.data-row-id]="rowId(row)" (click)="rowClick.emit(row)">
                 @for (col of columns(); track col.key) {
                   <td [class]="'table__td--' + (col.align ?? 'left')">
                     {{ col.cell ? col.cell(row) : (asRecord(row)[col.key] ?? '—') }}
@@ -121,6 +122,12 @@ export class DataTable<T> {
   showActions = input<boolean>(true);
   /** Extra per-row verbs, rendered before view/edit/delete. */
   actions = input<DataTableAction<T>[]>([]);
+  /**
+   * When set, the row whose id equals this value briefly pulses (background
+   * flash) to draw the eye — used right after a create so the user is taken to
+   * the freshly added line. Cleared by the parent after the animation.
+   */
+  highlightId = input<number | string | null>(null);
 
   rowClick = output<T>();
   view = output<T>();
@@ -141,4 +148,14 @@ export class DataTable<T> {
 
   asRecord(row: T): Record<string, unknown> { return row as unknown as Record<string, unknown>; }
   trackByFn(row: T): unknown { return (row as { id?: unknown }).id ?? row; }
+
+  rowId(row: T): number | string | null {
+    const id = (row as { id?: number | string }).id;
+    return id ?? null;
+  }
+
+  isHighlighted(row: T): boolean {
+    const target = this.highlightId();
+    return target != null && this.rowId(row) === target;
+  }
 }

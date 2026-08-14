@@ -30,9 +30,35 @@ export const createProductEffect = createEffect(
   (actions$ = inject(Actions), service = inject(ProductService), toast = inject(ToastService)) =>
     actions$.pipe(
       ofType(ProductActions.create),
-      exhaustMap(({ payload }) =>
+      exhaustMap(({ payload, sale }) =>
         service.create(payload).pipe(
-          map((product) => { toast.success('Produit créé.'); return ProductActions.createSuccess({ product }); }),
+          switchMap((product) => {
+            // The backend CreateProductCommand only accepts a *purchase* price,
+            // so any sale price / margin entered on the create form would be
+            // silently dropped (stored as 0). Persist it now with an update —
+            // UpdateProductCommand does accept unitSalePrice / marginPercent.
+            const wantsSale = !!sale && ((sale.unitSalePrice ?? 0) > 0 || (sale.marginPercent ?? 0) > 0);
+            if (!wantsSale) {
+              toast.success('Produit créé.');
+              return of(ProductActions.createSuccess({ product }));
+            }
+            return service.update(product.id, {
+              name: product.name,
+              description: product.description ?? payload.description ?? '',
+              categoryId: product.categoryId ?? payload.categoryId,
+              unitPurchasePrice: product.unitPurchasePrice ?? payload.unitPurchasePrice,
+              unit: product.unit ?? payload.unit,
+              unitSalePrice: sale!.unitSalePrice,
+              marginPercent: sale!.marginPercent,
+            }).pipe(
+              map((updated) => { toast.success('Produit créé.'); return ProductActions.createSuccess({ product: updated }); }),
+              // Creation itself succeeded; only the price top-up failed.
+              catchError(() => {
+                toast.success('Produit créé — pensez à vérifier le prix de vente.');
+                return of(ProductActions.createSuccess({ product }));
+              }),
+            );
+          }),
           catchError((e) => of(ProductActions.createFailure({ message: msg(e, 'Création impossible.') }))),
         ),
       ),

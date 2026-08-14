@@ -127,6 +127,35 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/operations/finance/comptabilite/ui/comptabilite/comptabilite').then((m) => m.Comptabilite),
       },
 
+      // ---- Achat (procure-to-pay) ----
+      {
+        path: 'achat/fournisseurs',
+        canActivate: [permissionGuard], data: { permissions: [Permission.SUPPLIER_READ], breadcrumb: ['Achat', 'Fournisseurs'] },
+        loadComponent: () => import('./pages/achat/fournisseurs/ui/fournisseurs-list/fournisseurs-list').then((m) => m.FournisseursList),
+      },
+      {
+        path: 'achat/commandes',
+        canActivate: [permissionGuard], data: { permissions: [Permission.PURCHASE_ORDER_READ], breadcrumb: ['Achat', 'Commandes'] },
+        loadComponent: () => import('./pages/achat/commandes/ui/achat-commandes-list/achat-commandes-list').then((m) => m.AchatCommandesList),
+      },
+      {
+        path: 'achat/factures',
+        canActivate: [permissionGuard], data: { permissions: [Permission.SUPPLIER_INVOICE_READ], breadcrumb: ['Achat', 'Factures'] },
+        loadComponent: () => import('./pages/achat/factures/ui/factures-fournisseur-list/factures-fournisseur-list').then((m) => m.FacturesFournisseurList),
+      },
+      {
+        path: 'achat/avoirs',
+        canActivate: [permissionGuard], data: { permissions: [Permission.SUPPLIER_INVOICE_READ], breadcrumb: ['Achat', 'Avoirs'] },
+        loadComponent: () => import('./pages/achat/avoirs/ui/avoirs-fournisseur-list/avoirs-fournisseur-list').then((m) => m.AvoirsFournisseurList),
+      },
+
+      // ---- Messagerie ----
+      {
+        path: 'messagerie',
+        canActivate: [permissionGuard], data: { permissions: [Permission.MESSAGE_READ], breadcrumb: ['Messagerie'] },
+        loadComponent: () => import('./pages/messagerie/ui/messagerie/messagerie').then((m) => m.Messagerie),
+      },
+
       // ---- Reporting ----
       {
         path: 'reporting/finances',

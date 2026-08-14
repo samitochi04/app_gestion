@@ -1,0 +1,17 @@
+<app-page-header title="Commandes d’achat" description="Bons de commande fournisseur (CA-…).">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouvelle commande</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="orders()" [loading]="loading()"
+      [searchTerm]="searchTerm()"
+      emptyTitle="Aucune commande d’achat"
+      emptyMessage="Créez une commande, confirmez-la, puis réceptionnez le stock avec la référence de commande."
+      [canView]="true" [canDelete]="false"
+      (view)="view($event)" (edit)="edit($event)"
+    />
+  </div>
+</app-card>

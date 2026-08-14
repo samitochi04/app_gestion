@@ -24,7 +24,9 @@
         <app-data-table
           [columns]="movementColumns" [rows]="movements()" [loading]="loading()"
           [searchTerm]="search()"
-          emptyTitle="Aucun mouvement" [showActions]="false"
+          emptyTitle="Aucun mouvement"
+          [canView]="true" [canEdit]="false" [canDelete]="false"
+          (view)="viewMovement($event)"
         />
       </div>
       <div class="table-footer">

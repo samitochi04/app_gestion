@@ -1,0 +1,17 @@
+<app-page-header title="Avoirs fournisseur" description="Avoirs d’achat (AVF-…) — retours et gestes commerciaux.">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouvel avoir</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="notes()" [loading]="loading()"
+      [searchTerm]="searchTerm()" [actions]="actions"
+      emptyTitle="Aucun avoir fournisseur"
+      emptyMessage="Un avoir corrige une facture fournisseur validée (retour ou remise)."
+      [canView]="true" [canEdit]="false" [canDelete]="false"
+      (view)="view($event)"
+    />
+  </div>
+</app-card>

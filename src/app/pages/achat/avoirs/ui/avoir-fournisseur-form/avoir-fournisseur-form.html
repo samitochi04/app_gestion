@@ -1,0 +1,40 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div class="row-2">
+    <app-form-field label="Facture fournisseur" [required]="true"
+      [error]="submitted() && form.controls.supplierInvoiceId.invalid ? 'Facture requise.' : ''">
+      <app-select [options]="invoiceOptions()" formControlName="supplierInvoiceId" placeholder="Choisir..." />
+    </app-form-field>
+    <app-form-field label="Nature" [required]="true">
+      <app-select [options]="kinds" formControlName="kind" />
+    </app-form-field>
+  </div>
+
+  <app-form-field label="Motif" [required]="true"
+    [error]="submitted() && form.controls.reason.invalid ? 'Motif requis.' : ''">
+    <app-text-input formControlName="reason" />
+  </app-form-field>
+
+  <p class="t-micro mv-lines-title">Lignes</p>
+  <p class="t-caption mv-hint">
+    <strong>Retour</strong> : la marchandise ressort de l’entrepôt d’avariés.
+    <strong>Financier</strong> : remise, aucun mouvement de stock.
+  </p>
+  <div formArrayName="lines" class="mv-lines">
+    @for (line of lines.controls; track $index; let i = $index) {
+      <div [formGroupName]="i" class="mv-line">
+        <app-select [options]="productOptions()" formControlName="productId" placeholder="Produit" />
+        <app-text-input type="number" formControlName="quantity" placeholder="Qté" />
+        <app-text-input type="number" formControlName="unitPrice" placeholder="Prix unitaire" />
+        <app-text-input type="number" formControlName="vatRate" placeholder="TVA %" />
+        <button type="button" class="mv-line__remove" (click)="removeLine(i)" aria-label="Retirer la ligne">
+          <app-icon name="x" [size]="16" />
+        </button>
+      </div>
+    }
+  </div>
+  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+
+  <div class="form-actions">
+    <app-button type="submit" [loading]="saving()">Créer l’avoir</app-button>
+  </div>
+</form>

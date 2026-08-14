@@ -1,0 +1,17 @@
+<app-page-header title="Fournisseurs" description="Répertoire des fournisseurs (achats).">
+  <app-search-input (changed)="searchTerm.set($event)" />
+  <app-button (pressed)="create()">+ Nouveau</app-button>
+</app-page-header>
+
+<app-card [padded]="false">
+  <div class="table-container">
+    <app-data-table
+      [columns]="columns" [rows]="suppliers()" [loading]="loading()"
+      [searchTerm]="searchTerm()" [actions]="actions"
+      emptyTitle="Aucun fournisseur"
+      emptyMessage="Créez votre premier fournisseur pour lancer des commandes d’achat."
+      [canView]="true" [canDelete]="false"
+      (view)="view($event)" (edit)="edit($event)"
+    />
+  </div>
+</app-card>

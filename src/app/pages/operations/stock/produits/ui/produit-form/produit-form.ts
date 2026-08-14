@@ -70,6 +70,9 @@ export class ProduitForm {
           name: v.name!, sku: v.sku!, type: v.type!, unit: v.unit!,
           unitPurchasePrice: v.unitPurchasePrice!, description: v.description ?? '', categoryId: v.categoryId!,
         },
+        // The create command drops the sale price; hand it to the effect so it
+        // can set it with an immediate follow-up update.
+        sale: { unitSalePrice: v.unitSalePrice ?? undefined, marginPercent: v.marginPercent ?? undefined },
       }));
     }
     this.ref.close(true);

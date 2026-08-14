@@ -11,9 +11,17 @@ Bibliothèque standard Python uniquement — rien à installer.
 python tools/test_api.py --email <adresse> --password <mot de passe>
 ```
 
-Le rapport HTML est écrit dans `rapport-api.html` puis **servi sur
-<http://localhost:5173>** ; le navigateur s'ouvre automatiquement. `Ctrl+C`
-arrête le serveur.
+Par défaut l'outil **teste tout** (mode complet) : lectures **et** écritures
+(création → validation → règlement…). Il produit trois choses :
+
+1. un **résumé texte des pannes** prêt à copier-coller (`pannes-backend.txt`),
+   aussi affiché dans le terminal entre deux repères « À COPIER-COLLER » ;
+2. un rapport **HTML** détaillé (`rapport-api.html`), servi sur
+   <http://localhost:5173> — le navigateur s'ouvre tout seul, `Ctrl+C` arrête ;
+3. le détail **console** ligne par ligne.
+
+C'est le fichier `pannes-backend.txt` qu'on envoie au dev backend : une ligne
+par endpoint qui échoue, groupé par module, sans détail superflu.
 
 Les identifiants peuvent aussi venir de l'environnement :
 
@@ -25,12 +33,13 @@ ERP_EMAIL=... ERP_PASSWORD=... python tools/test_api.py
 
 | Mode | Ce qu'il fait |
 |---|---|
-| `--mode read` (défaut) | N'exécute que des lectures. Aucune donnée créée. |
-| `--mode write` | Ajoute le cycle complet : catégorie → entrepôt → produit → réception → ajustement → transfert → sortie → réservation, client → devis → commande → expédition, pro forma → facture → encaissement → avoir, compte → OD → contre-passation → lettrage, etc. |
+| `--mode write` (**défaut**) | Teste **tous** les endpoints : ajoute le cycle complet catégorie → entrepôt → produit → réception → ajustement → transfert → sortie → réservation, client → devis → commande → expédition, pro forma → facture → encaissement → avoir, compte → OD → contre-passation → lettrage, fournisseur → commande d'achat → facture → règlement, messagerie, etc. |
+| `--mode read` | N'exécute que des lectures. Aucune donnée créée. |
 
-En mode écriture, tout ce qui est créé porte le suffixe `APITEST-<horodatage>`
-pour rester identifiable en base. Les opérations réellement destructrices ou
-visibles de l'extérieur (envoi de courriels, remplacement du logo, import de
+En mode complet, tout ce qui est créé porte le suffixe `APITEST-<horodatage>`
+pour rester identifiable en base, et une suite de **nettoyage** finale supprime
+les fixtures créées quand c'est possible. Les opérations réellement destructrices
+ou visibles de l'extérieur (envoi de courriels, remplacement du logo, import de
 masse, réécriture du plan comptable) restent volontairement `SKIP`.
 
 ## Options utiles
@@ -39,13 +48,15 @@ masse, réécriture du plan comptable) restent volontairement `SKIP`.
 |---|---|
 | `--list` | Affiche les suites disponibles |
 | `--only products,orders` | Ne lance que certaines suites |
+| `--mode read` | Lectures seules (le défaut teste tout) |
 | `--base-url` | Cible un autre backend (défaut : `http://51.75.248.25:8084`) |
 | `--origin` | En-tête `Origin` envoyé (défaut : `http://localhost:4200`) |
 | `--no-origin` | N'envoie aucun `Origin` — appel serveur à serveur |
+| `--whatsapp chemin.txt` | Chemin du résumé des pannes (défaut : `pannes-backend.txt`) |
 | `--json out.json` | Rapport JSON, pour une intégration CI |
 | `--html chemin.html` | Chemin du rapport HTML |
 | `--port 5173` | Port du serveur de rapport |
-| `--no-serve` | Écrit le rapport et quitte |
+| `--no-serve` | Écrit les rapports et quitte |
 | `-v` | Trace chaque appel HTTP |
 
 Code de sortie `0` si tout passe, `1` s'il reste un échec — utilisable tel quel
@@ -91,6 +102,7 @@ tools/api_test/
     supplier.py    fournisseurs, commandes d'achat, factures et avoirs d'achat
     messaging.py   conversations, messages, flux SSE
     audit.py       journal d'audit
+    cleanup.py     suppression des fixtures créées (DELETE), en dernier
 ```
 
 Ajouter une suite = déposer un fichier dans `suites/`, le décorer avec

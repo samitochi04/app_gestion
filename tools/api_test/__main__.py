@@ -14,7 +14,10 @@ import webbrowser
 from . import __version__
 from . import suites  # noqa: F401  (imports register every suite)
 from .http import HttpClient
-from .runner import Context, print_console, registered_suites, run, summarize, write_html, write_json
+from .runner import (
+    Context, print_console, registered_suites, run, summarize,
+    write_html, write_json, write_whatsapp,
+)
 
 DEFAULT_BASE_URL = "http://51.75.248.25:8084"
 #: Origin the backend's CORS configuration actually allows. Verified with a
@@ -35,10 +38,10 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Exemples :\n"
-            "  python tools/test_api.py                          # lecture seule, rapport servi sur :5173\n"
-            "  python tools/test_api.py --mode write             # exécute aussi le flux vente complet\n"
-            "  python tools/test_api.py --only products,orders   # limite à quelques suites\n"
-            "  python tools/test_api.py --no-serve --json out.json\n"
+            "  python tools/test_api.py --email <adresse> --password <mdp>   # teste TOUT, rapport + résumé pannes\n"
+            "  python tools/test_api.py --mode read ...                       # lectures seules (aucune écriture)\n"
+            "  python tools/test_api.py --only products,orders ...            # limite à quelques suites\n"
+            "  python tools/test_api.py --no-serve ...                        # écrit les rapports et quitte\n"
         ),
     )
     p.add_argument("--base-url", default=os.getenv("ERP_BASE_URL", DEFAULT_BASE_URL), help=f"URL du backend (défaut : {DEFAULT_BASE_URL})")
@@ -53,14 +56,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--mode",
         choices=("read", "write"),
-        default="read",
-        help="read : n'effectue que des lectures. write : crée aussi des documents de test (marqués APITEST-…)",
+        default="write",
+        help="write (défaut) : teste TOUT, y compris les créations/validations (données marquées APITEST-…). "
+        "read : n'effectue que des lectures, aucune écriture.",
     )
     p.add_argument("--only", default="", help="liste de suites séparées par des virgules (voir --list)")
     p.add_argument("--list", action="store_true", help="afficher les suites disponibles puis quitter")
     p.add_argument("--timeout", type=int, default=45, help="délai maximal par appel, en secondes")
     p.add_argument("--json", dest="json_path", default="", help="chemin du rapport JSON")
     p.add_argument("--html", dest="html_path", default="rapport-api.html", help="chemin du rapport HTML")
+    p.add_argument(
+        "--whatsapp",
+        dest="whatsapp_path",
+        default="pannes-backend.txt",
+        help="chemin du résumé texte des pannes, à copier-coller (défaut : pannes-backend.txt)",
+    )
     p.add_argument("--port", type=int, default=DEFAULT_REPORT_PORT, help=f"port du serveur de rapport (défaut : {DEFAULT_REPORT_PORT})")
     p.add_argument("--no-serve", action="store_true", help="ne pas servir le rapport, quitter immédiatement")
     p.add_argument("--no-color", action="store_true", help="désactiver la couleur")
@@ -97,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  Backend    : {args.base_url}")
     print(f"  Compte     : {args.email}")
     print(f"  Origin     : {origin or '(aucun)'}")
-    print(f"  Mode       : {'écriture (crée des documents de test)' if args.mode == 'write' else 'lecture seule'}")
+    print(f"  Mode       : {'complet — teste tout, crée des données APITEST' if args.mode == 'write' else 'lecture seule'}")
     print()
 
     client = HttpClient(base_url=args.base_url, origin=origin, timeout=args.timeout, verbose=args.verbose)
@@ -106,12 +116,28 @@ def main(argv: list[str] | None = None) -> int:
     login = client.post("/api/auth/login", {"email": args.email, "password": args.password}, anonymous=True)
     if not login.ok or not isinstance(login.data, dict):
         print(f"  Connexion impossible : {login.failure}", file=sys.stderr)
+        note_lines = [
+            "*Test API backend KIT*",
+            f"{time.strftime('%d/%m/%Y à %H:%M')} — {args.base_url}",
+            "",
+            "❌ *Connexion impossible* — impossible de lancer les tests.",
+            f"   → {login.failure or 'aucune réponse du serveur'}",
+        ]
         if login.status == 403 and origin:
             print(
                 f"  L'origine « {origin} » est refusée par la configuration CORS du backend.\n"
                 f"  Relancez avec --no-origin, ou avec l'origine autorisée.",
                 file=sys.stderr,
             )
+            note_lines.append(f"   → l'origine « {origin} » est refusée par le CORS du backend.")
+        elif login.status == 0:
+            note_lines.append("   → le backend semble injoignable (arrêté, ou mauvaise URL).")
+        note_lines.append("")
+        if args.whatsapp_path:
+            with open(args.whatsapp_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(note_lines))
+            print(f"\n  Résumé pannes : {os.path.abspath(args.whatsapp_path)}", file=sys.stderr)
+            print("\n" + "\n".join(note_lines))
         return 2
 
     client.token = login.data.get("accessToken", "")
@@ -152,6 +178,20 @@ def main(argv: list[str] | None = None) -> int:
     if args.html_path:
         write_html(args.html_path, ctx.checks, summary, meta)
         print(f"  Rapport HTML : {os.path.abspath(args.html_path)}")
+
+    # WhatsApp-ready plain-text summary of what is broken — always produced,
+    # and echoed to the console between clear markers so it can be copied from
+    # the terminal too.
+    if args.whatsapp_path:
+        text = write_whatsapp(args.whatsapp_path, ctx.checks, summary, meta)
+        print(f"  Résumé pannes : {os.path.abspath(args.whatsapp_path)}")
+        print("\n" + "═" * 88)
+        print("  À COPIER-COLLER (WhatsApp) — début")
+        print("═" * 88 + "\n")
+        print(text)
+        print("═" * 88)
+        print("  À COPIER-COLLER — fin")
+        print("═" * 88)
 
     if args.html_path and not args.no_serve:
         _serve(args.html_path, args.port)

@@ -12,8 +12,8 @@
     <app-data-table
       [columns]="columns" [rows]="customers()" [loading]="loading()"
       [searchTerm]="searchTerm()"
-      emptyTitle="Aucun client" [canView]="false"
-      (edit)="edit($event)" (delete)="remove($event)"
+      emptyTitle="Aucun client" [canView]="true"
+      (view)="view($event)" (edit)="edit($event)" (delete)="remove($event)"
     />
   </div>
   <div class="table-footer">

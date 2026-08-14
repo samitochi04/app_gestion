@@ -1,0 +1,72 @@
+<app-page-header title="Messagerie" description="Échanges internes entre utilisateurs, groupes et support.">
+  <app-button (pressed)="newConversation()">+ Nouvelle conversation</app-button>
+</app-page-header>
+
+<div class="msg">
+  <app-card [padded]="false" class="msg__list u-scroll">
+    @if (loadingList()) {
+      <p class="t-caption msg__muted">Chargement…</p>
+    } @else if (conversations().length === 0) {
+      <app-empty-state icon="message-circle" title="Aucune conversation"
+                        message="Démarrez une conversation avec un collègue." />
+    } @else {
+      @for (c of conversations(); track c.id) {
+        <button type="button" class="msg__conv" [class.msg__conv--on]="active()?.id === c.id" (click)="select(c)">
+          <span class="msg__avatar">{{ title(c).charAt(0).toUpperCase() }}</span>
+          <span class="msg__conv-meta">
+            <span class="msg__conv-top">
+              <span class="t-body-strong msg__conv-title">{{ title(c) }}</span>
+              <span class="msg__badge">{{ typeLabel(c) }}</span>
+            </span>
+            <span class="t-caption msg__preview">{{ c.lastMessagePreview || 'Pas encore de message' }}</span>
+          </span>
+          @if ((c.unreadCount ?? 0) > 0) { <span class="msg__unread">{{ c.unreadCount }}</span> }
+        </button>
+      }
+    }
+  </app-card>
+
+  <app-card [padded]="false" class="msg__panel">
+    @if (!active()) {
+      <div class="msg__placeholder">
+        <app-empty-state icon="message-circle" title="Sélectionnez une conversation"
+                          message="Choisissez un fil à gauche, ou démarrez-en un nouveau." />
+      </div>
+    } @else {
+      <header class="msg__header">
+        <span class="t-h3">{{ title(active()!) }}</span>
+        <span class="msg__badge">{{ typeLabel(active()!) }}</span>
+      </header>
+
+      <div class="msg__thread u-scroll">
+        @if (loadingThread()) {
+          <p class="t-caption msg__muted">Chargement des messages…</p>
+        } @else {
+          @for (m of messages(); track m.id) {
+            <div class="msg__row" [class.msg__row--mine]="isMine(m)">
+              <div class="msg__bubble" [class.msg__bubble--mine]="isMine(m)">
+                @if (!isMine(m)) { <span class="t-caption msg__sender">{{ m.senderName || 'Utilisateur' }}</span> }
+                @if (m.deleted) {
+                  <span class="msg__deleted">message supprimé</span>
+                } @else {
+                  <span class="msg__body">{{ m.body }}</span>
+                }
+                <span class="msg__time">{{ when(m.createdAt) }}@if (m.editedAt) { · modifié }</span>
+              </div>
+            </div>
+          } @empty {
+            <p class="t-caption msg__muted">Aucun message. Écrivez le premier ci-dessous.</p>
+          }
+        }
+      </div>
+
+      <form class="msg__composer" (ngSubmit)="send()">
+        <input class="input msg__input" placeholder="Écrire un message…"
+               [ngModel]="draft()" (ngModelChange)="draft.set($event)" name="draft" autocomplete="off" />
+        <button type="submit" class="msg__send" aria-label="Envoyer" [disabled]="!draft().trim()">
+          <app-icon name="send" [size]="18" />
+        </button>
+      </form>
+    }
+  </app-card>
+</div>

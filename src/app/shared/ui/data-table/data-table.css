@@ -22,3 +22,13 @@
 }
 .table__action:hover { background: var(--color-surface); color: var(--color-primary); }
 .table__action--danger:hover { color: var(--color-danger); }
+
+/* Row flash: pulses the background right after a create so the eye lands on the
+   freshly inserted line. Uses the brand accent tint, fading back to normal. */
+@keyframes table-row-flash {
+  0%   { background: var(--color-accent-tint, rgba(59, 130, 246, 0.18)); }
+  100% { background: transparent; }
+}
+.table__row--flash {
+  animation: table-row-flash 2s ease-out;
+}

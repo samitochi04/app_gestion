@@ -104,6 +104,27 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    key: 'achat',
+    label: 'Achat',
+    icon: 'truck',
+    accent: 'var(--module-operations)',
+    links: [
+      { label: 'Fournisseurs', route: '/app/achat/fournisseurs', anyOf: [Permission.SUPPLIER_READ] },
+      { label: 'Commandes', route: '/app/achat/commandes', anyOf: [Permission.PURCHASE_ORDER_READ] },
+      { label: 'Factures', route: '/app/achat/factures', anyOf: [Permission.SUPPLIER_INVOICE_READ] },
+      { label: 'Avoirs', route: '/app/achat/avoirs', anyOf: [Permission.SUPPLIER_INVOICE_READ] },
+    ],
+  },
+  {
+    key: 'messagerie',
+    label: 'Messagerie',
+    icon: 'message-circle',
+    accent: 'var(--module-reporting)',
+    links: [
+      { label: 'Conversations', route: '/app/messagerie', anyOf: [Permission.MESSAGE_READ] },
+    ],
+  },
+  {
     key: 'reporting',
     label: 'Reporting',
     icon: 'bar-chart',

@@ -9,6 +9,7 @@ import { SearchInput } from '../../../../../../shared/ui/search-input/search-inp
 import { DataTable, DataTableColumn } from '../../../../../../shared/ui/data-table/data-table';
 import { Paginator } from '../../../../../../shared/ui/paginator/paginator';
 import { DialogService } from '../../../../../../core/services/dialog.service';
+import { DetailDialog, DetailDialogData } from '../../../../../../shared/ui/detail-dialog/detail-dialog';
 import { ConfirmDialog } from '../../../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { FilterDialog, FilterFieldConfig } from '../../../../../../shared/ui/filter-dialog/filter-dialog';
 import { CustomerActions } from '../../data/store/customer.actions';
@@ -73,6 +74,24 @@ export class ClientsList implements OnInit {
 
   create(): void {
     this.dialog.open(ClientForm, { title: 'Nouveau client', size: 'lg' });
+  }
+
+  view(customer: Customer): void {
+    const data: DetailDialogData = {
+      sections: [{
+        title: 'Client',
+        fields: [
+          { label: 'Nom', value: customer.name },
+          { label: 'Type', value: customer.type === 'INDIVIDUAL' ? 'Particulier' : 'Entreprise' },
+          { label: 'Statut', value: customer.active ? 'Actif' : 'Inactif', tone: customer.active ? 'success' : 'neutral' },
+          { label: 'E-mail', value: customer.email || '—' },
+          { label: 'Téléphone', value: customer.phone || '—' },
+          { label: 'Identifiant fiscal', value: customer.taxId || '—' },
+          { label: 'Adresse', value: [customer.street, customer.postalCode, customer.city, customer.country].filter(Boolean).join(', ') || '—' },
+        ],
+      }],
+    };
+    this.dialog.open(DetailDialog, { title: `Client — ${customer.name}`, size: 'md', data });
   }
 
   edit(customer: Customer): void {

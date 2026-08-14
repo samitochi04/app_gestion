@@ -20,11 +20,13 @@
       [rows]="products()"
       [loading]="loading()"
       [searchTerm]="searchTerm()"
+      [highlightId]="flashId()"
       emptyTitle="Aucun produit"
       emptyMessage="Créez votre premier produit pour commencer."
+      (view)="view($event)"
       (edit)="edit($event)"
       (delete)="remove($event)"
-      [canView]="false"
+      [canView]="true"
     />
   </div>
   <div class="table-footer">

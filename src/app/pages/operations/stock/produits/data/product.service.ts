@@ -24,7 +24,12 @@ export class ProductService {
     return this.api.delete(`/api/products/${id}`);
   }
 
-  stock(id: number): Observable<PageResponse<ProductStockInfo>> {
-    return this.api.getPage<ProductStockInfo>(`/api/products/${id}/stock`);
+  /**
+   * `GET /api/products/{id}/stock` returns a *flat list* of per-warehouse stock
+   * lines (ApiResponse<List<StockCurrent>>), not a paginated envelope — so it
+   * unwraps with `get`, never `getPage`.
+   */
+  stock(id: number): Observable<ProductStockInfo[]> {
+    return this.api.get<ProductStockInfo[]>(`/api/products/${id}/stock`);
   }
 }

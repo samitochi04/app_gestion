@@ -15,9 +15,10 @@ export interface Customer {
 
 export interface CustomerRequest {
   name: string;
+  /** Backend `CustomerType` — required, one of INDIVIDUAL | COMPANY. */
+  type: string;
   email?: string;
   phone?: string;
-  type?: string;
   taxId?: string;
   street?: string;
   city?: string;
