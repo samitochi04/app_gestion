@@ -28,6 +28,11 @@
   cursor: pointer;
 }
 .params-file:hover { border-color: var(--color-primary); }
+
+.params-import-actions {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+}
+
 @media (max-width: 640px) {
   .params-uploads { grid-template-columns: 1fr; }
 }

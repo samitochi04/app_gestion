@@ -8,6 +8,10 @@ import { AuditEntry } from './audit.model';
 export class AuditService {
   private readonly api = inject(ApiService);
 
+  /**
+   * GET /api/audit supports filters: module, entityType, entityId, action,
+   * userId, dateFrom (from), dateTo (to), plus standard page/size.
+   */
   list(query?: PageQuery): Observable<PageResponse<AuditEntry>> {
     return this.api.getPage<AuditEntry>('/api/audit', query);
   }

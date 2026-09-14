@@ -12,8 +12,16 @@ import { Quote } from '../../data/quote.model';
 import { QuoteActions } from '../../data/store/quote.actions';
 import { ProductService } from '../../../../stock/produits/data/product.service';
 import { CustomerService } from '../../../clients/data/customer.service';
+import { WarehouseService } from '../../../../stock/entrepots/data/warehouse.service';
 
 export interface DevisFormData { quote?: Quote; }
+
+/**
+ * Non-actionable statuses — the quote is past the point where send/convert
+ * actions make sense. Hide those buttons for CONFIRMED, CANCELLED, CONVERTED,
+ * ACCEPTED, REJECTED, EXPIRED.
+ */
+const FINAL_STATUSES = ['CONFIRMED', 'CANCELLED', 'CONVERTED', 'ACCEPTED', 'REJECTED', 'EXPIRED'];
 
 @Component({
   selector: 'app-devis-form',
@@ -27,6 +35,7 @@ export class DevisForm {
   private readonly store = inject(Store);
   private readonly productService = inject(ProductService);
   private readonly customerService = inject(CustomerService);
+  private readonly warehouseService = inject(WarehouseService);
 
   data = inject(DIALOG_DATA) as DevisFormData;
   ref = inject(DIALOG_REF) as DialogRef<boolean>;
@@ -34,9 +43,19 @@ export class DevisForm {
   submitted = signal(false);
   isEdit = !!this.data?.quote;
   isDraft = !this.data?.quote || this.data.quote.status === 'DRAFT';
+  isSent = this.data?.quote?.status === 'SENT';
+
+  /** Whether the quote is in a final status where action buttons should be hidden. */
+  isFinal = !!this.data?.quote && FINAL_STATUSES.includes(this.data.quote.status);
+
+  /** Show actions only if the quote is still actionable (DRAFT or SENT). */
+  canSend = this.isEdit && this.isDraft && !this.isFinal;
+  canConvert = this.isEdit && !this.isFinal;
+  canSave = this.isDraft && !this.isFinal;
 
   productOptions = signal<SelectOption[]>([]);
   customerOptions = signal<SelectOption[]>([]);
+  warehouseOptions = signal<SelectOption[]>([]);
   /** productId → display name, so each line can carry the required productName. */
   private productNames = new Map<number, string>();
 
@@ -44,6 +63,7 @@ export class DevisForm {
     customerId: [this.data?.quote?.customerId ?? null, Validators.required],
     validUntil: [this.data?.quote?.validUntil ?? ''],
     notes: [this.data?.quote?.notes ?? ''],
+    warehouseId: [null as number | null],
     lines: this.fb.array((this.data?.quote?.lines ?? [this.emptyLine()]).map((l) => this.lineGroup(l))),
   });
 
@@ -56,6 +76,9 @@ export class DevisForm {
     });
     this.customerService.list({ page: 0, size: 200 }).subscribe((res) => {
       this.customerOptions.set(res.content.map((c) => ({ value: c.id, label: c.name })));
+    });
+    this.warehouseService.list().subscribe((list) => {
+      this.warehouseOptions.set(list.map((w) => ({ value: w.id, label: `${w.code} — ${w.name}` })));
     });
   }
 
@@ -84,10 +107,10 @@ export class DevisForm {
       customerId: v.customerId!,
       lines: v.lines.map((l) => ({
         productId: l.productId!,
-        // `productName` is required by QuoteLineDto — omitting it caused the 400.
         productName: this.productNames.get(l.productId!) ?? `Produit ${l.productId}`,
         quantity: l.quantity!, unitSalePrice: l.unitSalePrice!,
         discount: l.discount ?? 0, vatRate: l.vatRate ?? 20,
+        warehouseId: v.warehouseId ?? undefined,
       })),
       validUntil: v.validUntil || undefined,
       notes: v.notes ?? undefined,

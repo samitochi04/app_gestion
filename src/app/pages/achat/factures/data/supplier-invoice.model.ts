@@ -8,6 +8,22 @@ export const SUPPLIER_PAYMENT_METHODS: SelectOption[] = [
   { value: 'MOBILE_MONEY', label: 'Mobile Money' },
 ];
 
+/**
+ * `LineNature` distinguishes goods lines from service lines.
+ * Backend uses `GOOD` / `SERVICE`; display uses `Marchandise` / `Prestation`.
+ */
+export const LINE_NATURES: SelectOption[] = [
+  { value: 'GOOD', label: 'Marchandise' },
+  { value: 'SERVICE', label: 'Prestation' },
+];
+
+/** Translate backend nature code to display label. */
+export function natureLabel(nature: string): string {
+  if (nature === 'SERVICE') return 'Prestation';
+  if (nature === 'GOOD') return 'Marchandise';
+  return nature;
+}
+
 export interface SupplierInvoiceLine {
   id?: number;
   productId: number;

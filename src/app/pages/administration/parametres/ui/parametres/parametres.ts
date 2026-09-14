@@ -6,29 +6,34 @@ import { Card } from '../../../../../shared/ui/card/card';
 import { Button } from '../../../../../shared/ui/button/button';
 import { FormField } from '../../../../../shared/ui/form-field/form-field';
 import { TextInput } from '../../../../../shared/ui/text-input/text-input';
+import { Select, SelectOption } from '../../../../../shared/ui/select/select';
 import { SegmentedTabs, TabOption } from '../../../../../shared/ui/segmented-tabs/segmented-tabs';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { ApiError } from '../../../../../core/services/api.service';
+import { ApiError, ApiService } from '../../../../../core/services/api.service';
 import { THEME_OPTIONS, ThemeService } from '../../../../../core/services/theme.service';
 import { CompanySettings } from '../../data/company.model';
 import { CompanyService } from '../../data/company.service';
+import { WarehouseService } from '../../../../operations/stock/entrepots/data/warehouse.service';
+import { Warehouse } from '../../../../operations/stock/entrepots/data/warehouse.model';
+import { AccountingService } from '../../../../operations/finance/comptabilite/data/accounting.service';
 
 const TABS: TabOption[] = [
   { value: 'societe', label: 'Société' },
   { value: 'facturation', label: 'Facturation' },
+  { value: 'stocks', label: 'Stocks' },
   { value: 'apparence', label: 'Apparence' },
 ];
 
-/**
- * Two kinds of setting live here: the company identity printed on documents,
- * which the backend stores, and the theme, which is personal and local.
- * Company updates are split by concern, mirroring the four backend commands —
- * saving contact details can never overwrite legal mentions with stale values.
- */
+const IMPORT_TYPES: SelectOption[] = [
+  { value: 'categories', label: 'Catégories' },
+  { value: 'warehouses', label: 'Entrepôts' },
+  { value: 'products', label: 'Produits' },
+];
+
 @Component({
   selector: 'app-parametres',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeader, Card, Button, FormField, TextInput, SegmentedTabs],
+  imports: [ReactiveFormsModule, PageHeader, Card, Button, FormField, TextInput, Select, SegmentedTabs],
   templateUrl: './parametres.html',
   styleUrl: './parametres.css',
 })
@@ -36,6 +41,9 @@ export class Parametres implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(CompanyService);
   private readonly toast = inject(ToastService);
+  private readonly api = inject(ApiService);
+  private readonly warehouseService = inject(WarehouseService);
+  private readonly accountingService = inject(AccountingService);
 
   themeService = inject(ThemeService);
   options = THEME_OPTIONS;
@@ -45,6 +53,18 @@ export class Parametres implements OnInit {
   loading = signal(true);
   saving = signal(false);
   company = signal<CompanySettings | null>(null);
+
+  // --- Stock tab ---
+  importTypes = IMPORT_TYPES;
+  selectedImportType = signal<string>('products');
+  importingStock = signal(false);
+  importingChart = signal(false);
+  warehouses = signal<Warehouse[]>([]);
+  warehouseOptions = signal<SelectOption[]>([]);
+  purchaseDefaultId = signal<number | null>(null);
+  damagedDefaultId = signal<number | null>(null);
+  loadingWarehouses = signal(false);
+  settingDefault = signal(false);
 
   identityForm = this.fb.group({ name: [''], legalForm: [''], slogan: [''] });
   contactForm = this.fb.group({
@@ -58,7 +78,10 @@ export class Parametres implements OnInit {
     defaultVatRate: [null as number | null], invoiceFooter: [''], invoiceTerms: [''],
   });
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.loadWarehouses();
+  }
 
   load(): void {
     this.loading.set(true);
@@ -66,6 +89,98 @@ export class Parametres implements OnInit {
       next: (c) => { this.company.set(c); this.patch(c); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+  }
+
+  loadWarehouses(): void {
+    this.loadingWarehouses.set(true);
+    this.warehouseService.list().subscribe({
+      next: (list) => {
+        this.warehouses.set(list);
+        this.warehouseOptions.set(list.map((w) => ({ value: w.id, label: `${w.code} — ${w.name}` })));
+        const purchaseDef = list.find((w) => w.purchaseDefault);
+        const damagedDef = list.find((w) => w.damagedDefault);
+        this.purchaseDefaultId.set(purchaseDef?.id ?? null);
+        this.damagedDefaultId.set(damagedDef?.id ?? null);
+        this.loadingWarehouses.set(false);
+      },
+      error: () => this.loadingWarehouses.set(false),
+    });
+  }
+
+  setPurchaseDefault(newId: number | null): void {
+    if (newId == null) return;
+    this.settingDefault.set(true);
+    this.warehouseService.markPurchaseDefault(newId).subscribe({
+      next: () => {
+        this.toast.success('Entrepôt d\'achat par défaut mis à jour.');
+        this.purchaseDefaultId.set(newId);
+        this.loadWarehouses();
+        this.settingDefault.set(false);
+      },
+      error: (e) => {
+        this.settingDefault.set(false);
+        this.toast.error(e instanceof ApiError ? e.message : 'Impossible de définir l\'entrepôt par défaut.');
+      },
+    });
+  }
+
+  setDamagedDefault(newId: number | null): void {
+    if (newId == null) return;
+    this.settingDefault.set(true);
+    this.warehouseService.markDamagedDefault(newId).subscribe({
+      next: () => {
+        this.toast.success('Entrepôt d\'avariés par défaut mis à jour.');
+        this.damagedDefaultId.set(newId);
+        this.loadWarehouses();
+        this.settingDefault.set(false);
+      },
+      error: (e) => {
+        this.settingDefault.set(false);
+        this.toast.error(e instanceof ApiError ? e.message : 'Impossible de définir l\'entrepôt d\'avariés.');
+      },
+    });
+  }
+
+  downloadStockTemplate(): void {
+    const type = this.selectedImportType();
+    window.open(`/api/stock/import/${type}/template`, '_blank');
+  }
+
+  onStockImportSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const type = this.selectedImportType();
+    this.importingStock.set(true);
+    this.api.upload(`/api/stock/import/${type}`, file).subscribe({
+      next: () => {
+        this.importingStock.set(false);
+        this.toast.success(`Import ${type} réussi.`);
+        if (type === 'warehouses') this.loadWarehouses();
+      },
+      error: (e) => {
+        this.importingStock.set(false);
+        this.toast.error(e instanceof ApiError ? e.message : 'Import échoué.');
+      },
+    });
+    // Reset input so the same file can be re-selected.
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  onChartImportSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.importingChart.set(true);
+    this.accountingService.chartImport(file).subscribe({
+      next: () => {
+        this.importingChart.set(false);
+        this.toast.success('Plan comptable importé avec succès.');
+      },
+      error: (e) => {
+        this.importingChart.set(false);
+        this.toast.error(e instanceof ApiError ? e.message : 'Import du plan comptable échoué.');
+      },
+    });
+    (event.target as HTMLInputElement).value = '';
   }
 
   saveIdentity(): void {

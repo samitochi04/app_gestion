@@ -36,7 +36,53 @@
       <header class="msg__header">
         <span class="t-h3">{{ title(active()!) }}</span>
         <span class="msg__badge">{{ typeLabel(active()!) }}</span>
+        @if (isGroup()) {
+          <button type="button" class="msg__members-toggle" (click)="toggleMembers()" title="Gérer les membres">
+            <app-icon name="users" [size]="18" />
+          </button>
+        }
       </header>
+
+      @if (showMembers() && isGroup()) {
+        <div class="msg__members-panel">
+          <p class="t-body-strong msg__members-title">Membres du groupe ({{ activeParticipants().length }})</p>
+          <div class="msg__members-list u-scroll">
+            @for (p of activeParticipants(); track p.userId) {
+              <div class="msg__member">
+                <span class="msg__member-avatar">{{ (p.name || 'U').charAt(0).toUpperCase() }}</span>
+                <span class="msg__member-info">
+                  <span class="t-body-strong">{{ p.name || p.userId }}</span>
+                  @if (p.role === 'OWNER') { <span class="msg__badge msg__badge--small">Propriétaire</span> }
+                </span>
+                @if (p.userId !== currentUserId() && p.role !== 'OWNER') {
+                  <button type="button" class="msg__member-remove" (click)="removeMember(p.userId)" title="Retirer du groupe">
+                    <app-icon name="x" [size]="14" />
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <div class="msg__add-member">
+            <p class="t-caption msg__members-subtitle">Ajouter un membre</p>
+            <input class="input msg__member-search" placeholder="Rechercher…"
+                   [ngModel]="memberSearch()" (ngModelChange)="memberSearch.set($event)" name="memberSearch" />
+            <div class="msg__members-results u-scroll">
+              @for (c of filteredCorrespondents(); track c.id) {
+                <button type="button" class="msg__member msg__member--add" (click)="addMember(c.id)">
+                  <span class="msg__member-avatar">{{ (c.name || c.email).charAt(0).toUpperCase() }}</span>
+                  <span class="msg__member-info">
+                    <span class="t-body-strong">{{ c.name || c.email }}</span>
+                    <span class="t-caption">{{ c.email }}</span>
+                  </span>
+                  <span class="msg__member-add-icon">+</span>
+                </button>
+              } @empty {
+                <p class="t-caption msg__muted">Aucun correspondant disponible.</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
 
       <div class="msg__thread u-scroll">
         @if (loadingThread()) {

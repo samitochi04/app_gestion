@@ -11,7 +11,9 @@ import { Icon } from '../../../../../shared/ui/icon/icon';
 import { SUPPLIER_CREDIT_NOTE_KINDS } from '../../data/supplier-credit-note.model';
 import { SupplierCreditNoteService } from '../../data/supplier-credit-note.service';
 import { SupplierInvoiceService } from '../../../factures/data/supplier-invoice.service';
+import { SupplierInvoice } from '../../../factures/data/supplier-invoice.model';
 import { ProductService } from '../../../../operations/stock/produits/data/product.service';
+import { Product } from '../../../../operations/stock/produits/data/product.model';
 
 @Component({
   selector: 'app-avoir-fournisseur-form',
@@ -37,6 +39,11 @@ export class AvoirFournisseurForm {
   productOptions = signal<SelectOption[]>([]);
   private productNames = new Map<number, string>();
 
+  /** Map invoice id → full invoice for auto-fill. */
+  private invoicesById = new Map<number, SupplierInvoice>();
+  /** Map product id → product for price lookup. */
+  private productsById = new Map<number, Product>();
+
   form = this.fb.group({
     supplierInvoiceId: [null as number | null, Validators.required],
     kind: ['FINANCIAL', Validators.required],
@@ -49,16 +56,49 @@ export class AvoirFournisseurForm {
   constructor() {
     // Only validated invoices can be corrected by a credit note.
     this.invoiceService.list({ page: 0, size: 200 }).subscribe((res) => {
+      const creditable = res.content.filter((i) => i.status !== 'DRAFT' && i.status !== 'CANCELLED');
       this.invoiceOptions.set(
-        res.content
-          .filter((i) => i.status !== 'DRAFT' && i.status !== 'CANCELLED')
-          .map((i) => ({ value: i.id, label: `${i.reference} — ${i.supplierName ?? ''}`.trim() })),
+        creditable.map((i) => ({ value: i.id, label: `${i.reference} — ${i.supplierName ?? ''}`.trim() })),
       );
+      creditable.forEach((i) => this.invoicesById.set(i.id, i));
     });
     this.productService.list({ page: 0, size: 200 }).subscribe((res) => {
       this.productOptions.set(res.content.map((p) => ({ value: p.id, label: `${p.sku} — ${p.name}` })));
       this.productNames = new Map(res.content.map((p) => [p.id, p.name]));
+      res.content.forEach((p) => this.productsById.set(p.id, p));
     });
+
+    // Watch invoice selection to auto-fill lines
+    this.form.controls.supplierInvoiceId.valueChanges.subscribe((invoiceId) => {
+      if (invoiceId == null) return;
+      this.autoFillFromInvoice(invoiceId);
+    });
+  }
+
+  /**
+   * When a supplier invoice is selected, auto-fill lines from the invoice.
+   * Price = unitPurchasePrice (supplier context: purchase price).
+   */
+  private autoFillFromInvoice(invoiceId: number): void {
+    const invoice = this.invoicesById.get(invoiceId);
+    if (!invoice || !invoice.lines?.length) return;
+
+    // Clear existing lines
+    this.lines.clear();
+
+    // Re-create lines from invoice
+    for (const line of invoice.lines) {
+      // Supplier context → use unitPurchasePrice from product
+      const product = this.productsById.get(line.productId);
+      const unitPrice = product?.unitPurchasePrice ?? line.unitPrice ?? 0;
+
+      this.lines.push(this.fb.group({
+        productId: [line.productId, Validators.required],
+        quantity: [line.quantity, [Validators.required, Validators.min(0.01)]],
+        unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
+        vatRate: [line.vatRate ?? 19.25],
+      }));
+    }
   }
 
   private lineGroup() {

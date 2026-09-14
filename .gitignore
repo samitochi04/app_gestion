@@ -48,3 +48,5 @@ proxy.conf.json
 .env
 
 api-docs.json
+
+check-list.json

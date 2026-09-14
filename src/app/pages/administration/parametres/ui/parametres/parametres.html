@@ -1,4 +1,4 @@
-<app-page-header title="Paramètres" description="Identité de la société, facturation et préférences d’affichage." />
+<app-page-header title="Paramètres" description="Identité de la société, facturation, stocks et préférences d'affichage." />
 
 <app-segmented-tabs [options]="tabs" [active]="activeTab()" (selected)="activeTab.set($event)" class="params-tabs" />
 
@@ -109,6 +109,76 @@
           }
         </div>
       </div>
+    </app-card>
+  }
+
+  @case ('stocks') {
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Entrepôts par défaut</p>
+      <p class="t-caption params-desc">Définissez l'entrepôt de réception des achats et celui des avariés. Le changement est immédiat : l'ancien est retiré et le nouveau est défini en une seule opération.</p>
+      <div class="row-2">
+        <app-form-field label="Entrepôt d'achat par défaut"
+          hint="Reçoit les livraisons fournisseur (quantités saines).">
+          <app-select
+            [options]="warehouseOptions()"
+            [ngModel]="purchaseDefaultId()"
+            (ngModelChange)="setPurchaseDefault($event)"
+            placeholder="Aucun défini"
+          />
+        </app-form-field>
+        <app-form-field label="Entrepôt d'avariés par défaut"
+          hint="Reçoit les quantités endommagées à la réception.">
+          <app-select
+            [options]="warehouseOptions()"
+            [ngModel]="damagedDefaultId()"
+            (ngModelChange)="setDamagedDefault($event)"
+            placeholder="Aucun défini"
+          />
+        </app-form-field>
+      </div>
+      @if (settingDefault()) {
+        <p class="t-caption">Mise à jour en cours…</p>
+      }
+    </app-card>
+
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Import de données de stock</p>
+      <p class="t-caption params-desc">Importez des catégories, entrepôts ou produits depuis un fichier CSV ou Excel.</p>
+      <div class="row-2">
+        <app-form-field label="Type de données à importer">
+          <app-select
+            [options]="importTypes"
+            [ngModel]="selectedImportType()"
+            (ngModelChange)="selectedImportType.set($event)"
+          />
+        </app-form-field>
+        <app-form-field label="Actions">
+          <div class="params-import-actions">
+            <app-button variant="secondary" size="sm" (pressed)="downloadStockTemplate()">Télécharger le modèle</app-button>
+            <label class="params-file">
+              <input type="file" accept=".csv,.xlsx,.xls" (change)="onStockImportSelected($event)" hidden />
+              <span class="t-caption">Choisir un fichier à importer…</span>
+            </label>
+          </div>
+        </app-form-field>
+      </div>
+      @if (importingStock()) {
+        <p class="t-caption">Import en cours…</p>
+      }
+    </app-card>
+
+    <app-card class="params-card">
+      <p class="t-h3 params-title">Import du plan comptable</p>
+      <p class="t-caption params-desc">Importez le plan comptable OHADA depuis un fichier CSV ou Excel.</p>
+      <div class="params-import-actions">
+        <label class="params-file">
+          <input type="file" accept=".csv,.xlsx,.xls" (change)="onChartImportSelected($event)" hidden />
+          <span class="t-caption">Choisir un fichier à importer…</span>
+        </label>
+      </div>
+      @if (importingChart()) {
+        <p class="t-caption">Import en cours…</p>
+      }
     </app-card>
   }
 

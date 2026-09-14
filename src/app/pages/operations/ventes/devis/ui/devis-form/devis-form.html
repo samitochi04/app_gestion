@@ -3,10 +3,17 @@
     <app-form-field label="Client" [required]="true">
       <app-select [options]="customerOptions()" formControlName="customerId" placeholder="Choisir..." />
     </app-form-field>
-    <app-form-field label="Valide jusqu’au">
+    <app-form-field label="Valide jusqu'au">
       <app-date-input formControlName="validUntil" />
     </app-form-field>
   </div>
+
+  @if (isDraft) {
+    <app-form-field label="Entrepôt"
+      hint="Entrepôt de prélèvement pour la commande issue de ce devis.">
+      <app-select [options]="warehouseOptions()" formControlName="warehouseId" placeholder="Par défaut" />
+    </app-form-field>
+  }
 
   <p class="t-micro mv-lines-title">Lignes</p>
   <div formArrayName="lines" class="mv-lines">
@@ -21,19 +28,23 @@
       </div>
     }
   </div>
-  <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+  @if (canSave) {
+    <button type="button" class="mv-add-line" (click)="addLine()">+ Ajouter une ligne</button>
+  }
 
   <app-form-field label="Notes">
     <app-text-input formControlName="notes" />
   </app-form-field>
 
   <div class="form-actions">
-    @if (isEdit && isDraft) {
+    @if (canSend) {
       <app-button variant="secondary" type="button" (pressed)="send()">Envoyer</app-button>
     }
-    @if (isEdit) {
+    @if (canConvert) {
       <app-button variant="secondary" type="button" (pressed)="convert()">Convertir en commande</app-button>
     }
-    <app-button type="submit">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+    @if (canSave) {
+      <app-button type="submit">{{ isEdit ? 'Enregistrer' : 'Créer' }}</app-button>
+    }
   </div>
 </form>

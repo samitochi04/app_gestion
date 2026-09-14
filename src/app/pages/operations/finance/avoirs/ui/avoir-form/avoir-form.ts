@@ -12,8 +12,9 @@ import { Icon } from '../../../../../../shared/ui/icon/icon';
 import { CREDIT_NOTE_KINDS, CREDIT_NOTE_TYPES } from '../../data/credit-note.model';
 import { CreditNoteService } from '../../data/credit-note.service';
 import { InvoiceService } from '../../../factures/data/invoice.service';
-import { InvoiceLine } from '../../../factures/data/invoice.model';
+import { Invoice, InvoiceLine } from '../../../factures/data/invoice.model';
 import { ProductService } from '../../../../stock/produits/data/product.service';
+import { Product } from '../../../../stock/produits/data/product.model';
 import { WarehouseService } from '../../../../stock/entrepots/data/warehouse.service';
 
 /** Only a validated (or later) invoice can be credited. */
@@ -45,6 +46,11 @@ export class AvoirForm {
   productOptions = signal<SelectOption[]>([]);
   warehouseOptions = signal<SelectOption[]>([]);
 
+  /** Map invoice id → full invoice for auto-fill. */
+  private invoicesById = new Map<number, Invoice>();
+  /** Map product id → product for price lookup. */
+  private productsById = new Map<number, Product>();
+
   form = this.fb.group({
     invoiceId: [null as number | null, Validators.required],
     type: ['PARTIAL', Validators.required],
@@ -64,18 +70,50 @@ export class AvoirForm {
 
   constructor() {
     this.invoiceService.list({ page: 0, size: 200 }).subscribe((res) => {
+      const creditable = res.content.filter((i) => CREDITABLE.includes(i.status));
       this.invoiceOptions.set(
-        res.content
-          .filter((i) => CREDITABLE.includes(i.status))
-          .map((i) => ({ value: i.id, label: `${i.reference} — ${i.customerName}` })),
+        creditable.map((i) => ({ value: i.id, label: `${i.reference} — ${i.customerName}` })),
       );
+      creditable.forEach((i) => this.invoicesById.set(i.id, i));
     });
     this.productService.list({ page: 0, size: 200 }).subscribe((res) => {
       this.productOptions.set(res.content.map((p) => ({ value: p.id, label: `${p.sku} — ${p.name}` })));
+      res.content.forEach((p) => this.productsById.set(p.id, p));
     });
     this.warehouseService.list().subscribe((list) => {
       this.warehouseOptions.set(list.map((w) => ({ value: w.id, label: w.name })));
     });
+
+    // Watch invoice selection to auto-fill lines
+    this.form.controls.invoiceId.valueChanges.subscribe((invoiceId) => {
+      if (invoiceId == null) return;
+      this.autoFillFromInvoice(invoiceId);
+    });
+  }
+
+  /**
+   * When an invoice is selected, auto-fill the lines from the invoice.
+   * Price = unitSalePrice (client context: sale price).
+   */
+  private autoFillFromInvoice(invoiceId: number): void {
+    const invoice = this.invoicesById.get(invoiceId);
+    if (!invoice || !invoice.lines?.length) return;
+
+    // Clear existing lines
+    this.lines.clear();
+
+    // Re-create lines from invoice
+    for (const line of invoice.lines) {
+      // Client context → use unitPrice from invoice (which is the sale price)
+      const product = this.productsById.get(line.productId);
+      const unitPrice = product?.unitSalePrice ?? line.unitPrice ?? 0;
+
+      this.lines.push(this.fb.group({
+        productId: [line.productId, Validators.required],
+        quantity: [line.quantity, [Validators.required, Validators.min(0.01)]],
+        unitPrice: [unitPrice, [Validators.required, Validators.min(0)]],
+      }));
+    }
   }
 
   lineGroup() {
@@ -102,7 +140,7 @@ export class AvoirForm {
       reason: v.reason!,
       lines: v.lines.map((l) => this.toLine(l)),
     }).subscribe({
-      next: () => { this.toast.success('Avoir créé. Validez-le pour qu’il produise ses effets.'); this.ref.close(true); },
+      next: () => { this.toast.success('Avoir créé. Validez-le pour qu\'il produise ses effets.'); this.ref.close(true); },
       error: (e) => { this.saving.set(false); this.toast.error(e instanceof ApiError ? e.message : 'Création impossible.'); },
     });
   }

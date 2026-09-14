@@ -58,6 +58,31 @@ export class MessagingService {
     return this.api.post(`/api/messaging/conversations/${id}/reopen`);
   }
 
+  /** Add a participant to a GROUP conversation. */
+  addParticipant(conversationId: number, userId: string): Observable<unknown> {
+    return this.api.post(`/api/messaging/conversations/${conversationId}/participants/${userId}`);
+  }
+
+  /** Remove a participant from a GROUP conversation. */
+  removeParticipant(conversationId: number, userId: string): Observable<unknown> {
+    return this.api.delete(`/api/messaging/conversations/${conversationId}/participants/${userId}`);
+  }
+
+  /** Promote a participant to owner in a GROUP conversation. */
+  promoteParticipant(conversationId: number, userId: string): Observable<unknown> {
+    return this.api.post(`/api/messaging/conversations/${conversationId}/participants/${userId}/promote`);
+  }
+
+  /** Leave the current conversation. */
+  leave(conversationId: number): Observable<unknown> {
+    return this.api.post(`/api/messaging/conversations/${conversationId}/leave`);
+  }
+
+  /** Update subject of a GROUP conversation. */
+  updateSubject(conversationId: number, subject: string): Observable<unknown> {
+    return this.api.put(`/api/messaging/conversations/${conversationId}/subject`, { subject });
+  }
+
   // ---- Messages ----
   send(conversationId: number, body: SendMessageRequest): Observable<Message> {
     return this.api.post<Message>(`/api/messaging/conversations/${conversationId}/messages`, body);
@@ -82,11 +107,6 @@ export class MessagingService {
     return this.api.post<StreamTicket>('/api/messaging/stream/ticket');
   }
 
-  /**
-   * Opens the SSE stream. The browser EventSource can't set an Authorization
-   * header, so the stream is authenticated by a single-use ticket in the URL
-   * (MODULES.md). Returns the EventSource so the caller can close it.
-   */
   openStream(ticket: string): EventSource {
     const url = `${environment.apiBaseUrl}/api/messaging/stream?ticket=${encodeURIComponent(ticket)}`;
     return new EventSource(url);

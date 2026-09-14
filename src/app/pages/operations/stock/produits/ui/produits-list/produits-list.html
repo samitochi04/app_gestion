@@ -8,9 +8,17 @@
 </app-page-header>
 
 <app-alert-banner
-  [tone]="stockBannerTone()"
-  [title]="stockAlerts().length > 0 ? stockAlerts().length + ' produit(s) nécessitent votre attention' : 'Niveaux de stock normaux'"
-  [message]="stockAlerts().length > 0 ? 'Consultez Opérations > Mouvements > Stock actuel pour le détail.' : 'Aucune rupture ni alerte de stock bas actuellement.'"
+  [tone]="outOfStockCount() > 0 ? 'danger' : stockBannerTone()"
+  [title]="outOfStockCount() > 0
+    ? outOfStockCount() + ' produit(s) en rupture de stock'
+    : stockAlerts().length > 0
+      ? stockAlerts().length + ' produit(s) nécessitent votre attention'
+      : 'Niveaux de stock normaux'"
+  [message]="outOfStockCount() > 0
+    ? 'Ces produits n\'ont plus de stock disponible. Pensez à passer une commande d\'achat.'
+    : stockAlerts().length > 0
+      ? 'Consultez Opérations > Mouvements > Stock actuel pour le détail.'
+      : 'Aucune rupture ni alerte de stock bas actuellement.'"
 />
 
 <app-card [padded]="false">

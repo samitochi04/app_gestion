@@ -16,6 +16,13 @@ export interface TokenResponse {
   expiresIn: number;
   tokenType: string;
   user: AuthUser;
+  /**
+   * When `true`, the holder must call PUT /api/auth/change-password before
+   * accessing any other endpoint. The JWT itself carries this flag and
+   * JwtAuthenticationFilter rejects all other requests with 403
+   * PASSWORD_CHANGE_REQUIRED. See MODULES.md § erp-iam.
+   */
+  mustChangePassword?: boolean;
 }
 
 export interface LoginRequest { email: string; password: string; }
