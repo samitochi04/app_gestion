@@ -8,7 +8,6 @@ import { PageHeader } from '../../../../../../shared/ui/page-header/page-header'
 import { Card } from '../../../../../../shared/ui/card/card';
 import { Button } from '../../../../../../shared/ui/button/button';
 import { Icon } from '../../../../../../shared/ui/icon/icon';
-import { Badge } from '../../../../../../shared/ui/badge/badge';
 import { SearchInput } from '../../../../../../shared/ui/search-input/search-input';
 import { DataTable, DataTableColumn } from '../../../../../../shared/ui/data-table/data-table';
 import { Paginator } from '../../../../../../shared/ui/paginator/paginator';
@@ -38,7 +37,7 @@ interface StockStatus {
 @Component({
   selector: 'app-produits-list',
   standalone: true,
-  imports: [PageHeader, Card, Button, Icon, Badge, SearchInput, DataTable, Paginator, AlertBanner],
+  imports: [PageHeader, Card, Button, Icon, SearchInput, DataTable, Paginator, AlertBanner],
   templateUrl: './produits-list.html',
 })
 export class ProduitsList implements OnInit {

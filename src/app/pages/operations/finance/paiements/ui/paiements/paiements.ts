@@ -8,7 +8,6 @@ import { Button } from '../../../../../../shared/ui/button/button';
 import { Select, SelectOption } from '../../../../../../shared/ui/select/select';
 import { FormField } from '../../../../../../shared/ui/form-field/form-field';
 import { DataTable, DataTableColumn } from '../../../../../../shared/ui/data-table/data-table';
-import { EmptyState } from '../../../../../../shared/ui/empty-state/empty-state';
 import { DialogService } from '../../../../../../core/services/dialog.service';
 import { InvoiceService } from '../../../factures/data/invoice.service';
 import { Invoice, InvoicePayment } from '../../../factures/data/invoice.model';
@@ -28,7 +27,7 @@ interface PaymentRow extends InvoicePayment {
 @Component({
   selector: 'app-paiements',
   standalone: true,
-  imports: [PageHeader, Card, Button, Select, FormField, DataTable, EmptyState, FormsModule],
+  imports: [PageHeader, Card, Button, Select, FormField, DataTable, FormsModule],
   templateUrl: './paiements.html',
   styleUrl: './paiements.css',
 })

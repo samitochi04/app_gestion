@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { PageHeader } from '../../../../../shared/ui/page-header/page-header';
 import { Card } from '../../../../../shared/ui/card/card';
@@ -33,7 +33,7 @@ const IMPORT_TYPES: SelectOption[] = [
 @Component({
   selector: 'app-parametres',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeader, Card, Button, FormField, TextInput, Select, SegmentedTabs],
+  imports: [ReactiveFormsModule, FormsModule, PageHeader, Card, Button, FormField, TextInput, Select, SegmentedTabs],
   templateUrl: './parametres.html',
   styleUrl: './parametres.css',
 })
@@ -162,7 +162,6 @@ export class Parametres implements OnInit {
         this.toast.error(e instanceof ApiError ? e.message : 'Import échoué.');
       },
     });
-    // Reset input so the same file can be re-selected.
     (event.target as HTMLInputElement).value = '';
   }
 
